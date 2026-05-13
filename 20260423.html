@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>分數偵探｜交錯挑戰</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(145deg, #1e5a7d 0%, #0f3b4f 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Noto Sans TC', 'PingFang TC', 'Microsoft YaHei', system-ui, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .game-container {
+            max-width: 700px;
+            width: 100%;
+            background: rgba(255,248,225,0.96);
+            border-radius: 72px;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.6);
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        /* 分數展示區 */
+        .fraction-pair {
+            padding: 2rem 1.5rem 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2.8rem;
+            flex-wrap: wrap;
+            background: #fffaf2;
+        }
+
+        .fraction-card {
+            background: #ffffff;
+            border-radius: 48px;
+            padding: 1.2rem 2rem;
+            min-width: 160px;
+            text-align: center;
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+            transition: transform 0.2s ease;
+            border: 1px solid #ffe2b5;
+        }
+
+        .fraction {
+            font-size: 3.4rem;
+            font-weight: 800;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.2;
+            color: #2c3e4e;
+        }
+
+        .fraction span {
+            display: block;
+        }
+
+        .fraction .numerator {
+            border-bottom: 4px solid #d9a13b;
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+            font-size: 3rem;
+            min-width: 70px;
+        }
+
+        .fraction .denominator {
+            font-size: 3rem;
+            padding-top: 4px;
+        }
+
+        .options-area {
+            padding: 1rem 1.5rem 0.8rem;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            background: #fffaf2;
+        }
+
+        .game-btn {
+            font-size: 1.8rem;
+            font-weight: 800;
+            padding: 0.9rem 1.8rem;
+            border: none;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: 0.08s linear;
+            background: #f3e5c9;
+            box-shadow: 0 5px 0 #b5926a;
+            color: #4b2f14;
+            width: 220px;
+            letter-spacing: 4px;
+            font-family: inherit;
+            position: relative;
+        }
+
+        .game-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #b5926a;
+        }
+
+        .btn-pressed {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #b5926a;
+            filter: brightness(0.96);
+            transition: 0.05s;
+            border: 2px solid gold;
+            outline: 3px solid #ffd966;
+        }
+
+        .btn-same-num {
+            background: #a2d2ff;
+            box-shadow: 0 5px 0 #5f7f9e;
+            color: #002642;
+        }
+
+        .btn-same-den {
+            background: #ffb28b;
+            box-shadow: 0 5px 0 #b45f2e;
+            color: #2e1b0c;
+        }
+
+        .check-area {
+            background: #fffaf2;
+            padding: 0.5rem 1.5rem 0.8rem;
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .check-btn {
+            background: #4c7a8a;
+            border: none;
+            font-size: 1.4rem;
+            font-weight: bold;
+            padding: 10px 28px;
+            border-radius: 60px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #2b4b5c;
+            transition: 0.08s linear;
+            font-family: inherit;
+            letter-spacing: 2px;
+        }
+
+        .check-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #2b4b5c;
+        }
+
+        .pressed-answer-box {
+            background: #302215d9;
+            border-radius: 60px;
+            padding: 8px 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: inset 0 0 0 1px #ffdd99, 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .pressed-label {
+            font-size: 1rem;
+            color: #ffdaa5;
+            font-weight: 500;
+        }
+
+        .pressed-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: #f9e2b7;
+            padding: 4px 18px;
+            border-radius: 40px;
+            color: #2c1b0c;
+            letter-spacing: 2px;
+        }
+
+        .feedback-area {
+            background: #ecd9b4;
+            padding: 0.9rem 1rem;
+            text-align: center;
+            border-top: 2px solid #dbb87a;
+            border-bottom: 2px solid #dbb87a;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            min-height: 85px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result-correct {
+            color: #1f6d1f;
+            background: #d9ffd0;
+            display: inline-block;
+            padding: 6px 28px;
+            border-radius: 50px;
+            box-shadow: inset 0 0 0 2px #a2d48a;
+        }
+
+        .result-wrong {
+            color: #a1220a;
+            background: #ffe0d4;
+            display: inline-block;
+            padding: 6px 28px;
+            border-radius: 50px;
+            box-shadow: inset 0 0 0 2px #e09e7a;
+        }
+
+        .neutral-feedback {
+            color: #4f3f2c;
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .next-area {
+            background: #fffaf2;
+            padding: 1rem 1rem 1.8rem;
+            text-align: center;
+        }
+
+        .next-btn {
+            background: #6f9e3f;
+            border: none;
+            font-size: 1.3rem;
+            font-weight: bold;
+            padding: 12px 28px;
+            border-radius: 60px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #3b5c1a;
+            transition: 0.08s linear;
+            width: 70%;
+            max-width: 260px;
+            font-family: inherit;
+        }
+
+        .next-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #3b5c1a;
+        }
+
+        @media (max-width: 550px) {
+            .fraction-card { padding: 0.8rem 1rem; min-width: 120px; }
+            .fraction { font-size: 2.5rem; }
+            .fraction .numerator, .fraction .denominator { font-size: 2.2rem; }
+            .game-btn { font-size: 1.3rem; padding: 0.6rem 0.8rem; width: 160px; }
+            .feedback-area { font-size: 1.2rem; }
+            .check-btn { font-size: 1.1rem; padding: 8px 20px; }
+            .pressed-value { font-size: 1.2rem; padding: 2px 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <!-- 分數顯示區（所有分數皆為真分數） -->
+    <div class="fraction-pair">
+        <div class="fraction-card">
+            <div class="fraction" id="frac1">
+                <span class="numerator">2</span>
+                <span class="denominator">5</span>
+            </div>
+        </div>
+        <div class="fraction-card">
+            <div class="fraction" id="frac2">
+                <span class="numerator">3</span>
+                <span class="denominator">7</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 兩個選擇按鈕：移除表情符號，僅留文字 -->
+    <div class="options-area">
+        <button class="game-btn btn-same-num" id="sameNumeratorBtn">同分子分數</button>
+        <button class="game-btn btn-same-den" id="sameDenominatorBtn">同分母分數</button>
+    </div>
+
+    <!-- 核對區：獨立核對按鈕 + 明顯顯示按下去的答案（移除核對按鈕後方的 ✅） -->
+    <div class="check-area">
+        <button class="check-btn" id="checkBtn">核對答案</button>
+        <div class="pressed-answer-box">
+            <span class="pressed-label">你按下的答案：</span>
+            <span class="pressed-value" id="selectedAnswerDisplay">尚未選擇</span>
+        </div>
+    </div>
+
+    <!-- 反饋區：核對後只顯示「正確」或「錯誤」（錯誤後方無 ❌） -->
+    <div class="feedback-area" id="feedbackArea">
+        <span id="feedbackResult">請先點選上方按鈕，再按「核對答案」</span>
+    </div>
+
+    <div class="next-area">
+        <button class="next-btn" id="nextBtn">下一組</button>
+    </div>
+</div>
+
+<script>
+    // ---------- 輔助函數：隨機整數 ----------
+    function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // 產生一個【真分數】 (分子 < 分母，分母 >=2，分子 >=1)
+    function generateProperFraction() {
+        let denominator = randomInt(2, 12);
+        let numerator = randomInt(1, denominator - 1);
+        return { numerator, denominator };
+    }
+
+    // 根據指定的關係類型，生成一組真分數對 (同分子 或 同分母)
+    function generateFractionPairByType(relationType) {
+        if (relationType === 'sameNumerator') {
+            let commonNumerator = randomInt(1, 11);
+            let minDenom = commonNumerator + 1;
+            let denom1 = randomInt(minDenom, 12);
+            let denom2 = randomInt(minDenom, 12);
+            while (denom1 === denom2) {
+                denom2 = randomInt(minDenom, 12);
+            }
+            return {
+                frac1: { numerator: commonNumerator, denominator: denom1 },
+                frac2: { numerator: commonNumerator, denominator: denom2 },
+                relationType: 'sameNumerator'
+            };
+        } else {
+            let commonDenominator = randomInt(2, 12);
+            let maxNum = commonDenominator - 1;
+            if (maxNum < 1) maxNum = 1;
+            let num1 = randomInt(1, maxNum);
+            let num2 = randomInt(1, maxNum);
+            while (num1 === num2) {
+                num2 = randomInt(1, maxNum);
+            }
+            return {
+                frac1: { numerator: num1, denominator: commonDenominator },
+                frac2: { numerator: num2, denominator: commonDenominator },
+                relationType: 'sameDenominator'
+            };
+        }
+    }
+
+    // 更新畫面顯示分數
+    function updateFractionsUI(frac1, frac2) {
+        document.querySelector('#frac1 .numerator').textContent = frac1.numerator;
+        document.querySelector('#frac1 .denominator').textContent = frac1.denominator;
+        document.querySelector('#frac2 .numerator').textContent = frac2.numerator;
+        document.querySelector('#frac2 .denominator').textContent = frac2.denominator;
+    }
+
+    // 當前狀態
+    let currentCorrectRelation = 'sameNumerator';
+    let currentFrac1 = null;
+    let currentFrac2 = null;
+
+    // 紀錄上一題的關係類型，用來交錯 (避免連續相同類型)
+    let lastRelationType = null;
+
+    // 儲存玩家最後按下的答案
+    let lastPressedAnswer = null;
+
+    // DOM 元素
+    const sameNumBtn = document.getElementById('sameNumeratorBtn');
+    const sameDenBtn = document.getElementById('sameDenominatorBtn');
+    const checkBtn = document.getElementById('checkBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const selectedAnswerSpan = document.getElementById('selectedAnswerDisplay');
+    const feedbackResultSpan = document.getElementById('feedbackResult');
+
+    // 清除按鈕視覺效果
+    function clearPressedStyle() {
+        sameNumBtn.classList.remove('btn-pressed');
+        sameDenBtn.classList.remove('btn-pressed');
+    }
+
+    function updatePressedAnswerUI(answerType) {
+        if (answerType === 'sameNumerator') {
+            selectedAnswerSpan.innerText = '同分子分數';
+        } else if (answerType === 'sameDenominator') {
+            selectedAnswerSpan.innerText = '同分母分數';
+        } else {
+            selectedAnswerSpan.innerText = '尚未選擇';
+        }
+    }
+
+    function setPressedAnswer(answerType) {
+        lastPressedAnswer = answerType;
+        clearPressedStyle();
+        if (answerType === 'sameNumerator') {
+            sameNumBtn.classList.add('btn-pressed');
+        } else if (answerType === 'sameDenominator') {
+            sameDenBtn.classList.add('btn-pressed');
+        }
+        updatePressedAnswerUI(answerType);
+        // 清除核對結果，回到待核對狀態
+        feedbackResultSpan.innerHTML = '已選擇答案，請按「核對答案」';
+        feedbackResultSpan.className = 'neutral-feedback';
+        feedbackResultSpan.style.background = 'transparent';
+        feedbackResultSpan.style.boxShadow = 'none';
+        feedbackResultSpan.style.padding = '0';
+        feedbackResultSpan.style.display = 'inline-block';
+    }
+
+    function checkAnswer() {
+        if (lastPressedAnswer === null) {
+            feedbackResultSpan.innerHTML = '請先點選「同分子分數」或「同分母分數」按鈕';
+            feedbackResultSpan.className = 'neutral-feedback';
+            feedbackResultSpan.style.background = '#ffefcf';
+            feedbackResultSpan.style.padding = '6px 20px';
+            feedbackResultSpan.style.borderRadius = '50px';
+            feedbackResultSpan.style.display = 'inline-block';
+            return;
+        }
+
+        let isCorrect = (lastPressedAnswer === currentCorrectRelation);
+        if (isCorrect) {
+            feedbackResultSpan.innerHTML = '正確';
+            feedbackResultSpan.className = 'result-correct';
+            feedbackResultSpan.style.background = '#d9ffd0';
+            feedbackResultSpan.style.display = 'inline-block';
+            feedbackResultSpan.style.padding = '6px 28px';
+            feedbackResultSpan.style.borderRadius = '50px';
+            feedbackResultSpan.style.boxShadow = 'inset 0 0 0 2px #a2d48a';
+        } else {
+            feedbackResultSpan.innerHTML = '錯誤';
+            feedbackResultSpan.className = 'result-wrong';
+            feedbackResultSpan.style.background = '#ffe0d4';
+            feedbackResultSpan.style.display = 'inline-block';
+            feedbackResultSpan.style.padding = '6px 28px';
+            feedbackResultSpan.style.borderRadius = '50px';
+            feedbackResultSpan.style.boxShadow = 'inset 0 0 0 2px #e09e7a';
+        }
+    }
+
+    // 載入新題目，確保與上一題不同類型交錯出現
+    function loadNewQuestion() {
+        let newRelationType;
+        
+        if (lastRelationType === null) {
+            newRelationType = Math.random() < 0.5 ? 'sameNumerator' : 'sameDenominator';
+        } else {
+            newRelationType = (lastRelationType === 'sameNumerator') ? 'sameDenominator' : 'sameNumerator';
+        }
+        
+        const { frac1, frac2, relationType } = generateFractionPairByType(newRelationType);
+        
+        currentFrac1 = frac1;
+        currentFrac2 = frac2;
+        currentCorrectRelation = relationType;
+        
+        updateFractionsUI(frac1, frac2);
+        lastRelationType = currentCorrectRelation;
+        
+        lastPressedAnswer = null;
+        clearPressedStyle();
+        updatePressedAnswerUI(null);
+        
+        feedbackResultSpan.innerHTML = '請先選擇「同分子」或「同分母」，再按核對';
+        feedbackResultSpan.className = 'neutral-feedback';
+        feedbackResultSpan.style.background = 'transparent';
+        feedbackResultSpan.style.boxShadow = 'none';
+        feedbackResultSpan.style.padding = '0';
+        feedbackResultSpan.style.display = 'inline-block';
+    }
+
+    function bindEvents() {
+        sameNumBtn.onclick = () => setPressedAnswer('sameNumerator');
+        sameDenBtn.onclick = () => setPressedAnswer('sameDenominator');
+        checkBtn.onclick = () => checkAnswer();
+        nextBtn.onclick = () => loadNewQuestion();
+    }
+
+    function initGame() {
+        let initType = Math.random() < 0.5 ? 'sameNumerator' : 'sameDenominator';
+        const { frac1, frac2, relationType } = generateFractionPairByType(initType);
+        currentFrac1 = frac1;
+        currentFrac2 = frac2;
+        currentCorrectRelation = relationType;
+        lastRelationType = currentCorrectRelation;
+        updateFractionsUI(frac1, frac2);
+        
+        lastPressedAnswer = null;
+        clearPressedStyle();
+        updatePressedAnswerUI(null);
+        feedbackResultSpan.innerHTML = '點選「同分子分數」或「同分母分數」，再按核對答案';
+        feedbackResultSpan.className = 'neutral-feedback';
+        feedbackResultSpan.style.background = 'transparent';
+        feedbackResultSpan.style.boxShadow = 'none';
+        
+        bindEvents();
+    }
+
+    initGame();
+</script>
+</body>
+</html>
