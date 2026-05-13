@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>同分子分數比較｜雙模式練習</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(145deg, #2b5e6b 0%, #1a404a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', '微軟正黑體', 'Noto Sans TC', 'Times New Roman', 'Georgia', serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .master-container {
+            max-width: 1300px;
+            width: 100%;
+            background: #fef7e9;
+            border-radius: 70px;
+            box-shadow: 0 25px 40px rgba(0, 0, 0, 0.35), inset 0 1px 3px rgba(255, 255, 255, 0.7);
+            overflow: hidden;
+            padding: 20px 28px 30px;
+        }
+
+        /* 模式切換頁籤 - 只顯示第一部分 / 第二部分 */
+        .mode-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        .tab-btn {
+            background: #e7cfaa;
+            border: none;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 12px 40px;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: 0.1s;
+            color: #4a3722;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            font-family: inherit;
+        }
+        .tab-btn.active {
+            background: #f5b468;
+            color: white;
+            box-shadow: 0 6px 0 #9b5e2a;
+            transform: translateY(-2px);
+        }
+        .tab-btn:active {
+            transform: translateY(2px);
+        }
+
+        .mode-panel {
+            display: none;
+        }
+        .mode-panel.active-panel {
+            display: block;
+        }
+
+        /* ---------- 第一部分：選擇符號 (同分子真分數) ---------- */
+        .fraction-battle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin: 20px 0 20px;
+            flex-wrap: wrap;
+        }
+        .fraction-card {
+            flex: 1;
+            min-width: 220px;
+            background: linear-gradient(135deg, #ffffff, #fff9ef);
+            border-radius: 60px;
+            padding: 25px 15px;
+            text-align: center;
+            box-shadow: 0 15px 22px rgba(0, 0, 0, 0.15);
+            border: 2px solid #e7cfaa;
+        }
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.6rem;
+            font-weight: 600;
+            font-family: 'Cambria Math', 'Times New Roman', serif;
+            background: #fff4e4;
+            padding: 15px 25px;
+            border-radius: 55px;
+            box-shadow: inset 0 -3px 0 #ddb582, 0 12px 18px rgba(0, 0, 0, 0.1);
+        }
+        .fraction .numerator {
+            display: block;
+            text-align: center;
+            border-bottom: 3px solid #b97f48;
+            padding: 0 12px 8px 12px;
+            margin-bottom: 6px;
+            font-size: 3rem;
+        }
+        .fraction .denominator {
+            display: block;
+            text-align: center;
+            padding-top: 6px;
+            font-size: 3rem;
+        }
+        .compare-zone {
+            background: #f7e5cd;
+            border-radius: 100px;
+            padding: 22px 20px;
+            margin: 20px 0 30px;
+            display: flex;
+            justify-content: center;
+            gap: 35px;
+            flex-wrap: wrap;
+            box-shadow: inset 0 0 0 3px #fffbf0, 0 8px 18px rgba(0, 0, 0, 0.12);
+        }
+        .cmp-btn {
+            background: #f5b468;
+            border: none;
+            font-size: 3rem;
+            font-weight: bold;
+            width: 110px;
+            padding: 14px 0;
+            border-radius: 70px;
+            cursor: pointer;
+            box-shadow: 0 7px 0 #9b5e2a;
+            font-family: monospace;
+            color: #2d2418;
+            transition: 0.05s linear;
+        }
+        .cmp-btn:active { transform: translateY(4px); box-shadow: 0 3px 0 #9b5e2a; }
+        .visual-area {
+            display: flex;
+            justify-content: center;
+            gap: 45px;
+            margin: 15px 0 5px;
+            flex-wrap: wrap;
+        }
+        .pie-container {
+            text-align: center;
+            background: #fdf0df;
+            padding: 12px 15px;
+            border-radius: 50px;
+            width: 200px;
+        }
+        canvas.pie-canvas {
+            background: #fae9d4;
+            border-radius: 50%;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            width: 140px;
+            height: 140px;
+            display: block;
+            margin: 0 auto;
+        }
+        .feedback {
+            text-align: center;
+            padding: 12px;
+            border-radius: 60px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 20px 0 10px;
+            background: #f3e9d8;
+            border-left: 8px solid #e1bc8b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .feedback-correct { background: #cbe6c3; color: #2c6e2c; border-left-color: #5fa04f; }
+        .feedback-wrong { background: #ffdbd1; color: #bc4a2e; border-left-color: #d65c48; }
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 20px;
+        }
+        .reset-btn, .next-btn, .check-btn {
+            font-size: 1.2rem;
+            padding: 8px 25px;
+            border: none;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #6f4f2e;
+            background: #6da55a;
+            color: white;
+        }
+        .reset-btn { background: #c08552; }
+        .check-btn { background: #5f9e6e; }
+
+        /* ---------- 第二部分：拖曳排序 (同分子真分數) ---------- */
+        .slots-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 20px 0 30px;
+        }
+        .slot {
+            background: #f4e5d2;
+            border-radius: 50px;
+            padding: 20px 15px;
+            width: 230px;
+            text-align: center;
+            box-shadow: inset 0 0 0 3px #fff6e8, 0 12px 18px rgba(0, 0, 0, 0.1);
+            border: 2px dashed #c9aa7b;
+            min-height: 260px;
+            display: flex;
+            flex-direction: column;
+        }
+        .slot-content { flex:1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+        .symbol-between {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #b97f48;
+            background: #fdf0df;
+            width: 65px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 60px;
+            box-shadow: 0 5px 0 #d9b48b;
+            font-family: monospace;
+        }
+        .drag-source-area {
+            background: #eedfcb;
+            border-radius: 55px;
+            padding: 20px;
+            margin: 20px 0 15px;
+            text-align: center;
+        }
+        .drag-cards { display: flex; justify-content: center; gap: 35px; flex-wrap: wrap; }
+        .drag-item { width: 210px; }
+        .fraction-card.draggable-card { background: #ffe2b5; cursor: grab; border: 2px solid #f5bc7a; }
+        .fraction-card.draggable-card:active { cursor: grabbing; }
+        .slotted-card { background: #fff4e4; cursor: default; }
+        .fraction-display {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Cambria Math', 'Times New Roman', serif;
+        }
+        .fraction-display .numerator {
+            display: block;
+            border-bottom: 3px solid #b97f48;
+            padding: 0 12px 6px;
+            font-size: 1.8rem;
+        }
+        .fraction-display .denominator {
+            display: block;
+            padding-top: 4px;
+            font-size: 1.8rem;
+        }
+        .pie-canvas-small {
+            width: 80px;
+            height: 80px;
+            background: #fae9d4;
+            border-radius: 50%;
+            margin-top: 6px;
+        }
+
+        @media (max-width: 850px) {
+            .slot { width: 190px; }
+            .drag-item { width: 170px; }
+            .symbol-between { font-size: 2rem; width: 45px; height: 45px; }
+            .fraction .numerator, .fraction .denominator { font-size: 2rem; }
+            .cmp-btn { width: 80px; font-size: 2rem; }
+            .tab-btn { font-size: 1.2rem; padding: 8px 25px; }
+        }
+    </style>
+</head>
+<body>
+<div class="master-container">
+    <div class="mode-tabs">
+        <button class="tab-btn active" data-mode="mode1">第一部分</button>
+        <button class="tab-btn" data-mode="mode2">第二部分</button>
+    </div>
+
+    <!-- 第一部分：選擇符號 -->
+    <div id="mode1Panel" class="mode-panel active-panel">
+        <div class="fraction-battle">
+            <div class="fraction-card">
+                <div class="fraction">
+                    <span class="numerator" id="mode1LeftNum">2</span>
+                    <span class="denominator" id="mode1LeftDen">7</span>
+                </div>
+            </div>
+            <div class="fraction-card">
+                <div class="fraction">
+                    <span class="numerator" id="mode1RightNum">2</span>
+                    <span class="denominator" id="mode1RightDen">5</span>
+                </div>
+            </div>
+        </div>
+        <div class="visual-area">
+            <div class="pie-container"><canvas id="mode1LeftPie" width="200" height="200" class="pie-canvas"></canvas></div>
+            <div class="pie-container"><canvas id="mode1RightPie" width="200" height="200" class="pie-canvas"></canvas></div>
+        </div>
+        <div class="compare-zone">
+            <button class="cmp-btn" data-symbol=">"> &gt; </button>
+            <button class="cmp-btn" data-symbol="<"> &lt; </button>
+            <button class="cmp-btn" data-symbol="="> = </button>
+        </div>
+        <div class="feedback" id="mode1Feedback"></div>
+        <div class="action-buttons" style="margin-top:5px;">
+            <button class="reset-btn" id="mode1Reset">⟳ 新題目</button>
+        </div>
+    </div>
+
+    <!-- 第二部分：拖曳排序 -->
+    <div id="mode2Panel" class="mode-panel">
+        <div class="slots-area">
+            <div class="slot" data-slot="left"><div class="slot-content" id="slotLeftContent"></div></div>
+            <div class="symbol-between">＜</div>
+            <div class="slot" data-slot="middle"><div class="slot-content" id="slotMiddleContent"></div></div>
+            <div class="symbol-between">＜</div>
+            <div class="slot" data-slot="right"><div class="slot-content" id="slotRightContent"></div></div>
+        </div>
+        <div class="drag-source-area">
+            <div class="drag-cards" id="dragContainer"></div>
+        </div>
+        <div class="action-buttons">
+            <button class="check-btn" id="checkOrderBtn">✓ 檢查</button>
+            <button class="reset-btn" id="resetDragBtn">⟳ 重設</button>
+            <button class="next-btn" id="nextDragBtn">下一組 ↺</button>
+        </div>
+        <div class="feedback" id="mode2Feedback"></div>
+    </div>
+</div>
+
+<script>
+    // ==================== 第一部分：同分子真分數 (選擇符號) ====================
+    (function setupMode1() {
+        let leftNumer = 2, leftDenom = 7;
+        let rightNumer = 2, rightDenom = 5;
+        let answered = false;
+        let currentCorrect = '';
+
+        const leftNumSpan = document.getElementById('mode1LeftNum');
+        const leftDenSpan = document.getElementById('mode1LeftDen');
+        const rightNumSpan = document.getElementById('mode1RightNum');
+        const rightDenSpan = document.getElementById('mode1RightDen');
+        const feedbackDiv = document.getElementById('mode1Feedback');
+        const leftCanvas = document.getElementById('mode1LeftPie');
+        const rightCanvas = document.getElementById('mode1RightPie');
+        const cmpBtns = document.querySelectorAll('#mode1Panel .cmp-btn');
+        const resetBtn = document.getElementById('mode1Reset');
+
+        function drawPie(ctx, numerator, denominator) {
+            if (!ctx) return;
+            const w = ctx.canvas.width, h = ctx.canvas.height;
+            const centerX = w/2, centerY = h/2;
+            const radius = Math.min(w, h) * 0.4;
+            ctx.clearRect(0, 0, w, h);
+            if (denominator <= 0) denominator = 1;
+            let num = Math.min(Math.max(numerator, 0), denominator);
+            const angleStep = (2 * Math.PI) / denominator;
+            const startAngle = -Math.PI / 2;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = "#f7e5cd";
+            ctx.fill();
+            ctx.strokeStyle = "#b87a3c";
+            ctx.lineWidth = 1.8;
+            ctx.stroke();
+            for (let i = 0; i < denominator; i++) {
+                const angle = startAngle + i * angleStep;
+                const x2 = centerX + radius * Math.cos(angle);
+                const y2 = centerY + radius * Math.sin(angle);
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(x2, y2);
+                ctx.strokeStyle = "#c28a4e";
+                ctx.stroke();
+            }
+            if (num > 0) {
+                const fillAngle = num * angleStep;
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, startAngle + fillAngle);
+                ctx.closePath();
+                ctx.fillStyle = "#f0a35e";
+                ctx.fill();
+                for (let i = 0; i < denominator; i++) {
+                    const angle = startAngle + i * angleStep;
+                    const x2 = centerX + radius * Math.cos(angle);
+                    const y2 = centerY + radius * Math.sin(angle);
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.lineTo(x2, y2);
+                    ctx.strokeStyle = "#a5682c";
+                    ctx.stroke();
+                }
+            }
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = "#7a532c";
+            ctx.stroke();
+        }
+
+        function updatePies() {
+            drawPie(leftCanvas.getContext('2d'), leftNumer, leftDenom);
+            drawPie(rightCanvas.getContext('2d'), rightNumer, rightDenom);
+        }
+
+        function getCorrectRelation(den1, den2) {
+            if (den1 < den2) return '>';
+            if (den1 > den2) return '<';
+            return '=';
+        }
+
+        function generateProperFraction() {
+            const numerator = Math.floor(Math.random() * 5) + 1; // 1~5
+            const denominator = numerator + Math.floor(Math.random() * (12 - numerator)) + 1;
+            return { num: numerator, den: Math.min(denominator, 12) };
+        }
+
+        function loadNew() {
+            answered = false;
+            const frac1 = generateProperFraction();
+            let frac2 = generateProperFraction();
+            while (frac2.den === frac1.den) frac2 = generateProperFraction();
+            leftNumer = frac1.num;
+            leftDenom = frac1.den;
+            rightNumer = frac2.num;
+            rightDenom = frac2.den;
+            const commonNum = leftNumer;
+            rightNumer = commonNum;
+            leftNumSpan.innerText = leftNumer;
+            leftDenSpan.innerText = leftDenom;
+            rightNumSpan.innerText = rightNumer;
+            rightDenSpan.innerText = rightDenom;
+            currentCorrect = getCorrectRelation(leftDenom, rightDenom);
+            updatePies();
+            feedbackDiv.innerHTML = '';
+            feedbackDiv.classList.remove('feedback-correct', 'feedback-wrong');
+            cmpBtns.forEach(btn => { btn.disabled = false; btn.style.opacity = '1'; });
+        }
+
+        function handleCompare(symbol) {
+            if (answered) return;
+            const isCorrect = (symbol === currentCorrect);
+            if (isCorrect) {
+                feedbackDiv.innerHTML = '<span class="feedback-icon">✓</span> 正確';
+                feedbackDiv.classList.add('feedback-correct');
+                feedbackDiv.classList.remove('feedback-wrong');
+                answered = true;
+                cmpBtns.forEach(btn => { btn.disabled = true; btn.style.opacity = '0.6'; });
+            } else {
+                feedbackDiv.innerHTML = '<span class="feedback-icon">✗</span> 錯誤';
+                feedbackDiv.classList.add('feedback-wrong');
+                feedbackDiv.classList.remove('feedback-correct');
+            }
+        }
+
+        cmpBtns.forEach(btn => {
+            btn.addEventListener('click', () => handleCompare(btn.getAttribute('data-symbol')));
+        });
+        resetBtn.addEventListener('click', () => { loadNew(); });
+        loadNew();
+    })();
+
+    // ==================== 第二部分：拖曳排序 (同分子真分數) ====================
+    (function setupMode2() {
+        let currentNumerator = 2;
+        let fractions = [];
+        let nextId = 1;
+        let slotContents = { left: null, middle: null, right: null };
+        let availableCards = [];
+
+        const slotLeft = document.getElementById('slotLeftContent');
+        const slotMiddle = document.getElementById('slotMiddleContent');
+        const slotRight = document.getElementById('slotRightContent');
+        const dragContainer = document.getElementById('dragContainer');
+        const checkBtn = document.getElementById('checkOrderBtn');
+        const resetBtn = document.getElementById('resetDragBtn');
+        const nextBtn = document.getElementById('nextDragBtn');
+        const feedbackDiv = document.getElementById('mode2Feedback');
+
+        function drawMiniPie(canvas, numerator, denominator) {
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+            const centerX = w/2, centerY = h/2;
+            const radius = Math.min(w, h) * 0.38;
+            ctx.clearRect(0, 0, w, h);
+            if (denominator <= 0) denominator = 1;
+            let num = Math.min(Math.max(numerator, 0), denominator);
+            const angleStep = (2 * Math.PI) / denominator;
+            const startAngle = -Math.PI / 2;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = "#f7e5cd";
+            ctx.fill();
+            ctx.strokeStyle = "#b87a3c";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            for (let i = 0; i < denominator; i++) {
+                const angle = startAngle + i * angleStep;
+                const x2 = centerX + radius * Math.cos(angle);
+                const y2 = centerY + radius * Math.sin(angle);
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(x2, y2);
+                ctx.strokeStyle = "#c28a4e";
+                ctx.stroke();
+            }
+            if (num > 0) {
+                const fillAngle = num * angleStep;
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, startAngle + fillAngle);
+                ctx.closePath();
+                ctx.fillStyle = "#f0a35e";
+                ctx.fill();
+                for (let i = 0; i < denominator; i++) {
+                    const angle = startAngle + i * angleStep;
+                    const x2 = centerX + radius * Math.cos(angle);
+                    const y2 = centerY + radius * Math.sin(angle);
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.lineTo(x2, y2);
+                    ctx.strokeStyle = "#a5682c";
+                    ctx.stroke();
+                }
+            }
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = "#7a532c";
+            ctx.stroke();
+        }
+
+        function createFractionCard(denominator, cardId, isDraggable) {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'fraction-card ' + (isDraggable ? 'draggable-card' : 'slotted-card');
+            cardDiv.style.width = '100%';
+            const inner = document.createElement('div');
+            inner.style.display = 'flex';
+            inner.style.flexDirection = 'column';
+            inner.style.alignItems = 'center';
+            inner.style.gap = '8px';
+            const fracDiv = document.createElement('div');
+            fracDiv.className = 'fraction-display';
+            fracDiv.innerHTML = `<span class="numerator">${currentNumerator}</span><span class="denominator">${denominator}</span>`;
+            const canvas = document.createElement('canvas');
+            canvas.width = 90;
+            canvas.height = 90;
+            canvas.className = 'pie-canvas-small';
+            canvas.style.width = '80px';
+            canvas.style.height = '80px';
+            drawMiniPie(canvas, currentNumerator, denominator);
+            inner.appendChild(fracDiv);
+            inner.appendChild(canvas);
+            cardDiv.appendChild(inner);
+            if (isDraggable) {
+                cardDiv.setAttribute('data-card-id', cardId);
+                cardDiv.setAttribute('draggable', 'true');
+                cardDiv.ondragstart = (e) => {
+                    e.dataTransfer.setData('text/plain', cardId);
+                    e.dataTransfer.effectAllowed = 'move';
+                    cardDiv.classList.add('dragging');
+                };
+                cardDiv.ondragend = (e) => cardDiv.classList.remove('dragging');
+            }
+            return cardDiv;
+        }
+
+        function renderSlots() {
+            slotLeft.innerHTML = '';
+            slotMiddle.innerHTML = '';
+            slotRight.innerHTML = '';
+            if (slotContents.left) slotLeft.appendChild(createFractionCard(slotContents.left.denominator, slotContents.left.id, false));
+            else { let h = document.createElement('div'); h.innerText = '⬅️ 放置'; h.style.opacity='0.5'; h.style.padding='20px'; slotLeft.appendChild(h); }
+            if (slotContents.middle) slotMiddle.appendChild(createFractionCard(slotContents.middle.denominator, slotContents.middle.id, false));
+            else { let h = document.createElement('div'); h.innerText = '⬅️ 放置'; h.style.opacity='0.5'; h.style.padding='20px'; slotMiddle.appendChild(h); }
+            if (slotContents.right) slotRight.appendChild(createFractionCard(slotContents.right.denominator, slotContents.right.id, false));
+            else { let h = document.createElement('div'); h.innerText = '⬅️ 放置'; h.style.opacity='0.5'; h.style.padding='20px'; slotRight.appendChild(h); }
+        }
+
+        function renderDragArea() {
+            dragContainer.innerHTML = '';
+            if (availableCards.length === 0) {
+                let done = document.createElement('div'); done.innerText = '✨ 所有卡片已放置 ✨'; done.style.padding='15px'; dragContainer.appendChild(done);
+            } else {
+                availableCards.forEach(card => {
+                    let el = createFractionCard(card.denominator, card.id, true);
+                    let wrap = document.createElement('div'); wrap.className = 'drag-item'; wrap.appendChild(el);
+                    dragContainer.appendChild(wrap);
+                });
+            }
+        }
+
+        function generateThreeProperFractions() {
+            const numerator = Math.floor(Math.random() * 4) + 2;
+            let denominators = new Set();
+            while (denominators.size < 3) {
+                let minDen = numerator + 1;
+                let maxDen = 12;
+                let den = Math.floor(Math.random() * (maxDen - minDen + 1)) + minDen;
+                denominators.add(den);
+            }
+            return { num: numerator, dens: Array.from(denominators) };
+        }
+
+        function initNewDragQuestion() {
+            const { num, dens } = generateThreeProperFractions();
+            currentNumerator = num;
+            fractions = dens.map(d => ({ denominator: d, id: nextId++ }));
+            slotContents = { left: null, middle: null, right: null };
+            availableCards = fractions.map(f => ({ denominator: f.denominator, id: f.id }));
+            for (let i = availableCards.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [availableCards[i], availableCards[j]] = [availableCards[j], availableCards[i]];
+            }
+            renderSlots();
+            renderDragArea();
+            feedbackDiv.innerHTML = '';
+            feedbackDiv.classList.remove('feedback-correct', 'feedback-wrong');
+        }
+
+        function checkOrder() {
+            const left = slotContents.left;
+            const mid = slotContents.middle;
+            const right = slotContents.right;
+            if (!left || !mid || !right) {
+                feedbackDiv.innerHTML = '<span class="feedback-icon">✗</span> 錯誤';
+                feedbackDiv.classList.add('feedback-wrong');
+                return;
+            }
+            const leftDen = left.denominator;
+            const midDen = mid.denominator;
+            const rightDen = right.denominator;
+            if (leftDen > midDen && midDen > rightDen) {
+                feedbackDiv.innerHTML = '<span class="feedback-icon">✓</span> 正確';
+                feedbackDiv.classList.add('feedback-correct');
+                feedbackDiv.classList.remove('feedback-wrong');
+            } else {
+                feedbackDiv.innerHTML = '<span class="feedback-icon">✗</span> 錯誤';
+                feedbackDiv.classList.add('feedback-wrong');
+                feedbackDiv.classList.remove('feedback-correct');
+            }
+        }
+
+        function resetPositions() {
+            const all = [];
+            for (let s of ['left', 'middle', 'right']) if (slotContents[s]) all.push({ denominator: slotContents[s].denominator, id: slotContents[s].id });
+            all.push(...availableCards);
+            const map = new Map(); all.forEach(c => map.set(c.id, c));
+            availableCards = Array.from(map.values());
+            for (let i = availableCards.length-1; i>0; i--) { let j = Math.floor(Math.random()*(i+1)); [availableCards[i], availableCards[j]] = [availableCards[j], availableCards[i]]; }
+            slotContents = { left: null, middle: null, right: null };
+            renderSlots(); renderDragArea();
+            feedbackDiv.innerHTML = ''; feedbackDiv.classList.remove('feedback-correct','feedback-wrong');
+        }
+
+        function setupDropTargets() {
+            document.querySelectorAll('#mode2Panel .slot').forEach(slot => {
+                slot.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+                slot.addEventListener('drop', e => {
+                    e.preventDefault();
+                    let dragId = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                    let dragged = availableCards.find(c => c.id === dragId);
+                    if (!dragged) return;
+                    let targetSlot = slot.getAttribute('data-slot');
+                    if (slotContents[targetSlot] !== null) {
+                        feedbackDiv.innerHTML = '<span class="feedback-icon">✗</span> 錯誤';
+                        feedbackDiv.classList.add('feedback-wrong');
+                        setTimeout(() => { if(feedbackDiv.innerHTML.includes('錯誤')) feedbackDiv.innerHTML = ''; }, 800);
+                        return;
+                    }
+                    slotContents[targetSlot] = { denominator: dragged.denominator, id: dragged.id };
+                    let idx = availableCards.findIndex(c => c.id === dragId);
+                    if (idx !== -1) availableCards.splice(idx, 1);
+                    renderSlots(); renderDragArea();
+                    feedbackDiv.innerHTML = ''; feedbackDiv.classList.remove('feedback-correct','feedback-wrong');
+                });
+            });
+        }
+
+        window.addEventListener('dragstart', e => { if (!e.target.closest('.draggable-card')) e.preventDefault(); });
+        setupDropTargets();
+        checkBtn.addEventListener('click', checkOrder);
+        resetBtn.addEventListener('click', resetPositions);
+        nextBtn.addEventListener('click', () => { initNewDragQuestion(); });
+        initNewDragQuestion();
+    })();
+
+    // 頁籤切換
+    const tabs = document.querySelectorAll('.tab-btn');
+    const panels = { mode1: document.getElementById('mode1Panel'), mode2: document.getElementById('mode2Panel') };
+    tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mode = btn.getAttribute('data-mode');
+            tabs.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            panels.mode1.classList.remove('active-panel');
+            panels.mode2.classList.remove('active-panel');
+            if (mode === 'mode1') panels.mode1.classList.add('active-panel');
+            else panels.mode2.classList.add('active-panel');
+        });
+    });
+</script>
+</body>
+</html>
