@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>分數視覺化練習</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none; /* 避免拖曳干擾，但保留輸入框編輯 */
+        }
+
+        body {
+            background: linear-gradient(145deg, #fef9e6 0%, #fff3e0 100%);
+            font-family: 'Segoe UI', 'Noto Sans TC', 'Roboto', 'PingFang TC', system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .practice-card {
+            max-width: 1000px;
+            width: 100%;
+            background: #fffdf7;
+            border-radius: 64px;
+            box-shadow: 0 20px 35px rgba(80, 50, 15, 0.12);
+            padding: 22px 24px 32px;
+            border: 1px solid #ffdfb0;
+        }
+
+        /* 題目區塊：分數以 \frac{a}{b} 風格顯示 */
+        .problem-container {
+            background: #fff9ef;
+            border-radius: 56px;
+            padding: 18px 20px;
+            margin: 5px 0 20px 0;
+            text-align: center;
+            border: 1px solid #ffd9a0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.02);
+        }
+
+        .question {
+            font-size: 2.2rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            background: white;
+            padding: 10px 28px;
+            border-radius: 60px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .question .total-number {
+            background: #fdebb3;
+            padding: 0px 16px;
+            border-radius: 50px;
+            color: #a5632a;
+            font-size: 2rem;
+        }
+
+        .fraction-display {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 4px;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        .fraction-display .numerator {
+            border-bottom: 3px solid #f3b45a;
+            padding: 0 8px;
+            color: #cc6d1c;
+        }
+        .fraction-display .denominator {
+            padding: 0 8px;
+            color: #cc6d1c;
+        }
+        .is-text {
+            font-size: 1.9rem;
+            font-weight: 500;
+            color: #7a5a3a;
+        }
+
+        .draw-area {
+            background: #fffcf5;
+            border-radius: 48px;
+            padding: 18px 12px 12px;
+            margin: 12px 0 10px;
+            border: 1px solid #ffe3bc;
+        }
+
+        .canvas-wrapper {
+            display: flex;
+            justify-content: center;
+            background: #ffffffdb;
+            border-radius: 40px;
+            padding: 18px;
+            box-shadow: inset 0 0 0 2px white, 0 6px 14px rgba(0,0,0,0.05);
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: #fefaf0;
+            border-radius: 32px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            cursor: crosshair;
+            width: 100%;
+            height: auto;
+            border: 2px solid #f3cf96;
+        }
+
+        .action-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 18px;
+            margin: 15px 0 5px;
+        }
+        button {
+            background: #f0a54b;
+            border: none;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            padding: 8px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            background: #d48a36;
+            transform: scale(0.97);
+        }
+        .btn-clear {
+            background: #c2823a;
+        }
+        .btn-submit {
+            background: #47945b;
+        }
+        .btn-new {
+            background: #b96f30;
+        }
+
+        .answer-section {
+            background: #fef8ed;
+            border-radius: 48px;
+            padding: 20px 20px;
+            margin-top: 16px;
+            text-align: center;
+        }
+        .answer-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .answer-row label {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #6b4c2c;
+        }
+        #userAnswer {
+            font-size: 1.9rem;
+            width: 120px;
+            text-align: center;
+            padding: 6px 0;
+            border-radius: 60px;
+            border: 2px solid #e2b87a;
+            font-weight: bold;
+            background: white;
+            font-family: monospace;
+        }
+        .feedback-area {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 15px;
+            padding: 8px;
+            min-height: 55px;
+        }
+        .correct-feedback {
+            color: #2a8040;
+        }
+        .wrong-feedback {
+            color: #db4a27;
+        }
+        .no-hint { display: none; }
+    </style>
+</head>
+<body>
+<div class="practice-card">
+    <div class="problem-container">
+        <div class="question">
+            <span class="total-number" id="totalValue">10</span>
+            <span class="is-text">的</span>
+            <span class="fraction-display">
+                <span class="numerator" id="fractionNumerator">3</span>
+                <span class="denominator" id="fractionDenominator">5</span>
+            </span>
+            <span class="is-text">是</span>
+            <span style="width: 70px; display: inline-block;"></span>
+        </div>
+    </div>
+
+    <div class="draw-area">
+        <div class="canvas-wrapper">
+            <canvas id="objectCanvas" width="750" height="300" style="width:100%; height:auto; max-width:750px; aspect-ratio:750/300"></canvas>
+        </div>
+        <div class="action-bar">
+            <button id="clearLinesBtn" class="btn-clear">清除劃線</button>
+            <button id="checkAnswerBtn" class="btn-submit">核對答案</button>
+        </div>
+    </div>
+
+    <div class="answer-section">
+        <div class="answer-row">
+            <label>＝</label>
+            <input type="number" id="userAnswer" placeholder="?" value="" step="1">
+            <button id="submitAnswer" class="btn-submit">作答</button>
+        </div>
+        <div id="feedbackMsg" class="feedback-area"></div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // ========== 超可愛圖案題庫 ==========
+        const CUTE_OBJECTS = [
+            { name: "🐻 小熊軟糖", primary: "#D9A066", secondary: "#C28847", eyes: "circle", blush: true, ears: "bear", extra: "bear" },
+            { name: "🐱 小貓咪", primary: "#F7C56E", secondary: "#E3A853", eyes: "cat", blush: true, ears: "cat", extra: "cat" },
+            { name: "🐰 小兔兔", primary: "#F5CFB5", secondary: "#E8B793", eyes: "round", blush: true, ears: "rabbit", extra: "rabbit" },
+            { name: "🍎 紅蘋果", primary: "#F28B82", secondary: "#E06C5E", eyes: "smile", blush: true, leaf: true, extra: "apple" },
+            { name: "🍓 草莓寶貝", primary: "#E86F6F", secondary: "#D45848", eyes: "star", blush: true, leaf: true, seeds: true, extra: "strawberry" },
+            { name: "🍊 橘子喵", primary: "#F9AC67", secondary: "#F28B3B", eyes: "circle", blush: true, leaf: "small", extra: "orange" },
+            { name: "🐣 小雞球", primary: "#FDE15D", secondary: "#F7CD45", eyes: "dot", blush: true, crest: true, extra: "chick" },
+            { name: "🐧 小企鵝", primary: "#6C8C9E", secondary: "#517385", eyes: "shine", blush: true, beak: true, extra: "penguin" }
+        ];
+        
+        // ========== 整齊排列題庫 (自動計算最佳行列，確保整齊矩陣) ==========
+        // 題目組合：總數, 分子, 分母, 圖案索引，排列會由下方 getBestGrid 自動產生整齊 rows x cols
+        // 為了讓排列美觀，我們根據總數決定 rows, cols，使 rows * cols >= total 並盡量接近矩形，
+        // 並且讓每一行每一列對齊。題庫中的數字會自動按照矩陣排列 (ex: 15 -> 3x5, 24 -> 4x6 或 6x4)
+        const QUESTION_SET = [
+            { total: 10, numerator: 3, denominator: 5, objectIdx: 0, desc: "小熊軟糖" },
+            { total: 12, numerator: 5, denominator: 6, objectIdx: 1, desc: "小貓咪" },
+            { total: 8,  numerator: 3, denominator: 4, objectIdx: 2, desc: "小兔兔" },
+            { total: 15, numerator: 4, denominator: 5, objectIdx: 3, desc: "紅蘋果" },   // 15 -> 3x5 或 5x3
+            { total: 9,  numerator: 2, denominator: 3, objectIdx: 4, desc: "草莓寶貝" },
+            { total: 16, numerator: 5, denominator: 8, objectIdx: 5, desc: "橘子喵" },   // 16 -> 4x4
+            { total: 14, numerator: 3, denominator: 7, objectIdx: 6, desc: "小雞球" },
+            { total: 18, numerator: 5, denominator: 6, objectIdx: 7, desc: "小企鵝" },   // 18 -> 3x6 或 6x3
+            { total: 20, numerator: 7, denominator: 10, objectIdx: 0, desc: "小熊軟糖" }, // 20 -> 4x5
+            { total: 24, numerator: 5, denominator: 8, objectIdx: 1, desc: "小貓咪" },    // 24 -> 4x6 或 6x4
+            { total: 21, numerator: 2, denominator: 3, objectIdx: 2, desc: "小兔兔" },    // 21 -> 3x7
+            { total: 25, numerator: 3, denominator: 5, objectIdx: 3, desc: "紅蘋果" }     // 25 -> 5x5
+        ];
+        
+        let currentQIndex = 0;
+        let currentTotal = 10;
+        let currentNumerator = 3;
+        let currentDenominator = 5;
+        let currentObject = CUTE_OBJECTS[0];
+        let correctAnswer = 6;
+        
+        // Canvas 相關變數
+        const canvas = document.getElementById('objectCanvas');
+        const ctx = canvas.getContext('2d');
+        let canvasWidth = 750;
+        let canvasHeight = 300;
+        let itemPositions = [];
+        const defaultRadius = 26;
+        let lines = [];
+        let isDrawing = false;
+        let currentLine = null;
+        
+        // 整齊排列用的行列數 (自動計算)
+        let gridRows = 2;
+        let gridCols = 5;
+        
+        // ---------- 核心：根據總數計算整齊排列 (盡量讓 rows 和 cols 接近且乘積 >= total，多餘格子不顯示) ----------
+        // 為了讓視覺像是 15 => 3x5, 24 => 6x4 或 4x6，我們會選擇最佳比例
+        function getOptimalGrid(total) {
+            // 尋找最接近 sqrt(total) 的因數分解，讓行列整齊
+            let bestRows = 1;
+            let bestCols = total;
+            let bestDiff = Math.abs(bestRows - bestCols);
+            for (let r = 1; r <= Math.sqrt(total); r++) {
+                if (total % r === 0) {
+                    let c = total / r;
+                    let diff = Math.abs(r - c);
+                    if (diff < bestDiff) {
+                        bestDiff = diff;
+                        bestRows = r;
+                        bestCols = c;
+                    }
+                }
+            }
+            // 如果因數分解無法讓行列整齊，例如質數 17，我們會用無縫調整：取 ceil(sqrt) 組合
+            if (bestRows === 1 && bestCols === total && total > 7) {
+                // 不整除時，使用矩形填補法，例如 14 -> 2x7 , 18 -> 3x6
+                let newCols = Math.ceil(Math.sqrt(total));
+                let newRows = Math.ceil(total / newCols);
+                bestRows = newRows;
+                bestCols = newCols;
+            }
+            // 避免行數過多影響視覺，限制最多 6 行
+            if (bestRows > 6) {
+                bestRows = 6;
+                bestCols = Math.ceil(total / bestRows);
+            }
+            if (bestCols > 8) {
+                bestCols = 8;
+                bestRows = Math.ceil(total / bestCols);
+            }
+            return { rows: bestRows, cols: bestCols };
+        }
+        
+        // 根據 rows, cols 計算每個物件整齊位置 (網格對齊)
+        function computeGridPositions(rows, cols, total) {
+            const positions = [];
+            const paddingX = 55;
+            const paddingY = 40;
+            const startX = paddingX;
+            const endX = canvasWidth - paddingX;
+            const startY = paddingY;
+            const endY = canvasHeight - paddingY;
+            
+            // 動態間距
+            const stepX = (endX - startX) / (cols - 1);
+            const stepY = (endY - startY) / (rows - 1);
+            
+            let index = 0;
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (index >= total) break;
+                    let x = startX + c * stepX;
+                    let y = startY + r * stepY;
+                    // 邊界保護
+                    x = Math.min(Math.max(x, defaultRadius + 6), canvasWidth - defaultRadius - 6);
+                    y = Math.min(Math.max(y, defaultRadius + 6), canvasHeight - defaultRadius - 6);
+                    positions.push({ x, y, r: defaultRadius });
+                    index++;
+                }
+                if (index >= total) break;
+            }
+            return positions;
+        }
+        
+        // 重新計算物件位置 (整齊排列)
+        function updateItemPositions() {
+            const grid = getOptimalGrid(currentTotal);
+            gridRows = grid.rows;
+            gridCols = grid.cols;
+            itemPositions = computeGridPositions(gridRows, gridCols, currentTotal);
+        }
+        
+        // ========== 超可愛圖案繪製函式 (不變，維持可愛風格) ==========
+        function drawCuteObject(x, y, r, style) {
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI*2);
+            const grad = ctx.createLinearGradient(x-8, y-8, x+8, y+8);
+            grad.addColorStop(0, style.primary);
+            grad.addColorStop(1, style.secondary);
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.strokeStyle = "#B5713A";
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+            
+            if (style.extra === "bear") {
+                ctx.fillStyle = "#8C5A35";
+                ctx.beginPath();
+                ctx.arc(x-8, y-7, 4, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x+8, y-7, 4, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = "#FCF0CF";
+                ctx.beginPath();
+                ctx.arc(x-6, y-8, 1.8, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x+6, y-8, 1.8, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = "#6B3E1A";
+                ctx.beginPath();
+                ctx.arc(x, y+3, 4, 0, Math.PI);
+                ctx.fill();
+                ctx.fillStyle = style.secondary;
+                ctx.beginPath();
+                ctx.ellipse(x-12, y-14, 5, 7, -0.3, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(x+12, y-14, 5, 7, 0.3, 0, Math.PI*2);
+                ctx.fill();
+            } 
+            else if (style.extra === "cat") {
+                ctx.fillStyle = "#6F4A2E";
+                ctx.beginPath();
+                ctx.arc(x-7, y-6, 3.5, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x+7, y-6, 3.5, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = "#F9F2DE";
+                ctx.beginPath();
+                ctx.arc(x-5, y-7, 1.5, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x+5, y-7, 1.5, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = "#E8A87C";
+                ctx.beginPath();
+                ctx.moveTo(x-3, y+3);
+                ctx.quadraticCurveTo(x, y+8, x+3, y+3);
+                ctx.fill();
+                for(let i=-1; i<=1; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(x+i*5, y-13);
+                    ctx.lineTo(x+i*3, y-18);
+                    ctx.lineTo(x+i*7, y-18);
+                    ctx.fill();
+                }
+            }
+            else if (style.extra === "rabbit") {
+                ctx.fillStyle = "#B05E3A";
+                ctx.beginPath();
+                ctx.arc(x-7, y-6, 3.8, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x+7, y-6, 3.8, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = "white";
+                ctx.beginPath();
+                ctx.arc(x-5, y-7, 1.8, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x+5, y-7, 1.8, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = "#F0A3A3";
+                ctx.beginPath();
+                ctx.ellipse(x, y+4, 5, 3, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = style.secondary;
+                ctx.beginPath();
+                ctx.ellipse(x-9, y-17, 4, 10, -0.2, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(x+9, y-17, 4, 10, 0.2, 0, Math.PI*2);
+                ctx.fill();
+            }
+            else if (style.extra === "apple") {
+                ctx.fillStyle = "#6B4423";
+                ctx.beginPath();
+                ctx.moveTo(x-3, y-16);
+                ctx.lineTo(x, y-22);
+                ctx.lineTo(x+3, y-16);
+                ctx.fill();
+                ctx.fillStyle = "#6A4925";
+                ctx.beginPath();
+                ctx.arc(x-6, y-4, 3, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x+6, y-4, 3, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = "#EEDDAA";
+                ctx.beginPath();
+                ctx.arc(x, y+5, 4, 0, Math.PI);
+                ctx.fill();
+            }
+            else if (style.extra === "strawberry") {
+                ctx.fillStyle = "#558B2F";
+                ctx.beginPath();
+                ctx.moveTo(x-2, y-14);
+                ctx.lineTo(x, y-19);
+                ctx.lineTo(x+2, y-14);
+                ctx.fill();
+                for(let i=0;i<8;i++) {
+                    ctx.fillStyle = "#FADB67";
+                    ctx.beginPath();
+                    ctx.arc(x-7 + i*2.3, y-3, 1.5, 0, Math.PI*2);
+                    ctx.fill();
+                }
+                ctx.fillStyle = "#77450E";
+                ctx.beginPath();
+                ctx.arc(x-5, y-3, 2, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x+5, y-3, 2, 0, Math.PI*2);
+                ctx.fill();
+            }
+            else if (style.extra === "orange") {
+                ctx.fillStyle = "#5C8F2C";
+                ctx.beginPath();
+                ctx.moveTo(x-2, y-12);
+                ctx.lineTo(x, y-17);
+                ctx.lineTo(x+2, y-12);
+                ctx.fill();
+                ctx.fillStyle = "#A5673F";
+                ctx.beginPath();
+                ctx.arc(x-5, y-4, 2.5, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x+5, y-4, 2.5, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = "#FCE3A4";
+                ctx.beginPath();
+                ctx.ellipse(x, y+4, 5, 3, 0, 0, Math.PI*2);
+                ctx.fill();
+            }
+            else if (style.extra === "chick") {
+                ctx.fillStyle = "#E5672E";
+                ctx.beginPath();
+                ctx.moveTo(x, y-12);
+                ctx.lineTo(x, y-18);
+                ctx.lineTo(x+4, y-14);
+                ctx.fill();
+                ctx.fillStyle = "#6E3A1C";
+                ctx.beginPath();
+                ctx.arc(x-5, y-5, 2.5, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x+5, y-5, 2.5, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = "#FACF5A";
+                ctx.beginPath();
+                ctx.moveTo(x-4, y+3);
+                ctx.lineTo(x, y+8);
+                ctx.lineTo(x+4, y+3);
+                ctx.fill();
+            }
+            else if (style.extra === "penguin") {
+                ctx.fillStyle = "#FADB67";
+                ctx.beginPath();
+                ctx.ellipse(x, y-8, 6, 7, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = "#3F2B1D";
+                ctx.beginPath();
+                ctx.arc(x-6, y-5, 2.5, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x+6, y-5, 2.5, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = "#F08C5A";
+                ctx.beginPath();
+                ctx.moveTo(x-3, y+2);
+                ctx.quadraticCurveTo(x, y+7, x+3, y+2);
+                ctx.fill();
+            }
+            else {
+                ctx.fillStyle = "#7A4A2A";
+                ctx.beginPath();
+                ctx.arc(x-6, y-6, 3, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x+6, y-6, 3, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x, y+5, 4, 0, Math.PI);
+                ctx.fill();
+            }
+            
+            if (style.blush) {
+                ctx.fillStyle = "#FFB7B2";
+                ctx.globalAlpha = 0.6;
+                ctx.beginPath();
+                ctx.ellipse(x-11, y+2, 4, 3, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(x+11, y+2, 4, 3, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+        
+        function drawAllItems() {
+            for(let i=0; i<itemPositions.length; i++) {
+                const p = itemPositions[i];
+                drawCuteObject(p.x, p.y, p.r-2, currentObject);
+            }
+        }
+        
+        function drawAllLines() {
+            for(let line of lines) {
+                ctx.beginPath();
+                ctx.moveTo(line.x1, line.y1);
+                ctx.lineTo(line.x2, line.y2);
+                ctx.strokeStyle = "#F57C3A";
+                ctx.lineWidth = 3.5;
+                ctx.setLineDash([8, 6]);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(line.x1, line.y1, 5, 0, Math.PI*2);
+                ctx.fillStyle = "#F57C3A";
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(line.x2, line.y2, 5, 0, Math.PI*2);
+                ctx.fill();
+            }
+            ctx.setLineDash([]);
+        }
+        
+        function drawCurrentLine() {
+            if(currentLine) {
+                ctx.beginPath();
+                ctx.moveTo(currentLine.startX, currentLine.startY);
+                ctx.lineTo(currentLine.endX, currentLine.endY);
+                ctx.strokeStyle = "#FF9F4A";
+                ctx.lineWidth = 4;
+                ctx.setLineDash([6, 8]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+        
+        function redrawCanvas() {
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+            drawAllItems();
+            drawAllLines();
+            drawCurrentLine();
+        }
+        
+        function updateProblemDisplay() {
+            document.getElementById('totalValue').innerText = currentTotal;
+            document.getElementById('fractionNumerator').innerText = currentNumerator;
+            document.getElementById('fractionDenominator').innerText = currentDenominator;
+            correctAnswer = (currentTotal * currentNumerator) / currentDenominator;
+        }
+        
+        function loadQuestion(index) {
+            const q = QUESTION_SET[index % QUESTION_SET.length];
+            currentTotal = q.total;
+            currentNumerator = q.numerator;
+            currentDenominator = q.denominator;
+            currentObject = CUTE_OBJECTS[q.objectIdx % CUTE_OBJECTS.length];
+            updateProblemDisplay();
+            // 重新計算整齊排列
+            updateItemPositions();
+            lines = [];
+            currentLine = null;
+            isDrawing = false;
+            redrawCanvas();
+            document.getElementById('userAnswer').value = '';
+            document.getElementById('feedbackMsg').innerHTML = '';
+            document.getElementById('feedbackMsg').classList.remove('correct-feedback', 'wrong-feedback');
+        }
+        
+        function nextQuestion() {
+            currentQIndex = (currentQIndex + 1) % QUESTION_SET.length;
+            loadQuestion(currentQIndex);
+        }
+        
+        // 劃線互動 (與之前相同)
+        function getCanvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            let clientX, clientY;
+            if (e.touches) {
+                if (e.touches.length === 0) return null;
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            let canvasX = (clientX - rect.left) * scaleX;
+            let canvasY = (clientY - rect.top) * scaleY;
+            canvasX = Math.min(Math.max(canvasX, 0), canvasWidth);
+            canvasY = Math.min(Math.max(canvasY, 0), canvasHeight);
+            return { x: canvasX, y: canvasY };
+        }
+        
+        function onPointerDown(e) {
+            e.preventDefault();
+            const coord = getCanvasCoords(e);
+            if (!coord) return;
+            isDrawing = true;
+            currentLine = { startX: coord.x, startY: coord.y, endX: coord.x, endY: coord.y };
+            redrawCanvas();
+        }
+        
+        function onPointerMove(e) {
+            if (!isDrawing || !currentLine) return;
+            e.preventDefault();
+            const coord = getCanvasCoords(e);
+            if (coord) {
+                currentLine.endX = coord.x;
+                currentLine.endY = coord.y;
+                redrawCanvas();
+            }
+        }
+        
+        function onPointerUp(e) {
+            if (!isDrawing || !currentLine) {
+                isDrawing = false;
+                currentLine = null;
+                redrawCanvas();
+                return;
+            }
+            e.preventDefault();
+            const start = { x: currentLine.startX, y: currentLine.startY };
+            const end = { x: currentLine.endX, y: currentLine.endY };
+            if (Math.hypot(end.x - start.x, end.y - start.y) > 10) {
+                lines.push({ x1: start.x, y1: start.y, x2: end.x, y2: end.y });
+            }
+            isDrawing = false;
+            currentLine = null;
+            redrawCanvas();
+        }
+        
+        function clearLines() {
+            lines = [];
+            currentLine = null;
+            isDrawing = false;
+            redrawCanvas();
+        }
+        
+        function checkAnswer() {
+            const inputVal = parseInt(document.getElementById('userAnswer').value, 10);
+            const fb = document.getElementById('feedbackMsg');
+            if (isNaN(inputVal)) {
+                fb.innerHTML = "請輸入數字";
+                fb.classList.add('wrong-feedback');
+                fb.classList.remove('correct-feedback');
+                return;
+            }
+            if (inputVal === correctAnswer) {
+                fb.innerHTML = "✓ 正確！";
+                fb.classList.add('correct-feedback');
+                fb.classList.remove('wrong-feedback');
+            } else {
+                fb.innerHTML = "✗ 再試一次";
+                fb.classList.add('wrong-feedback');
+                fb.classList.remove('correct-feedback');
+            }
+        }
+        
+        function init() {
+            canvas.width = 750;
+            canvas.height = 300;
+            canvasWidth = 750;
+            canvasHeight = 300;
+            currentQIndex = 0;
+            loadQuestion(0);
+            
+            canvas.addEventListener('mousedown', onPointerDown);
+            window.addEventListener('mousemove', onPointerMove);
+            window.addEventListener('mouseup', onPointerUp);
+            canvas.addEventListener('touchstart', onPointerDown, {passive: false});
+            window.addEventListener('touchmove', onPointerMove, {passive: false});
+            window.addEventListener('touchend', onPointerUp);
+            canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+            
+            document.getElementById('clearLinesBtn').addEventListener('click', clearLines);
+            document.getElementById('checkAnswerBtn').addEventListener('click', checkAnswer);
+            document.getElementById('submitAnswer').addEventListener('click', checkAnswer);
+            
+            const newBtn = document.createElement('button');
+            newBtn.textContent = "新題目 🎀";
+            newBtn.classList.add('btn-new');
+            newBtn.addEventListener('click', () => nextQuestion());
+            document.querySelector('.action-bar').appendChild(newBtn);
+            
+            const ansInput = document.getElementById('userAnswer');
+            ansInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') checkAnswer(); });
+        }
+        
+        init();
+    })();
+</script>
+</body>
+</html>
