@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>分數排序 | 拖曳練習</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(145deg, #2b5e6b 0%, #1a404a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', '微軟正黑體', 'Noto Sans TC', 'Times New Roman', 'Georgia', serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .game-container {
+            max-width: 1100px;
+            width: 100%;
+            background: #fef7e9;
+            border-radius: 70px;
+            box-shadow: 0 25px 40px rgba(0, 0, 0, 0.35), inset 0 1px 3px rgba(255, 255, 255, 0.7);
+            overflow: hidden;
+            padding: 35px 28px 40px;
+            transition: all 0.2s ease;
+        }
+
+        /* 三個位置區 - 水平平排 */
+        .slots-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 20px 0 30px;
+        }
+
+        .slot {
+            background: #f4e5d2;
+            border-radius: 50px;
+            padding: 20px 15px;
+            width: 230px;
+            text-align: center;
+            box-shadow: inset 0 0 0 3px #fff6e8, 0 12px 18px rgba(0, 0, 0, 0.1);
+            transition: all 0.1s ease;
+            border: 2px dashed #c9aa7b;
+            min-height: 260px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slot-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        /* 小於符號 */
+        .symbol-between {
+            font-size: 3.2rem;
+            font-weight: bold;
+            color: #b97f48;
+            text-shadow: 2px 2px 0 #f7e5cd;
+            background: #fdf0df;
+            width: 65px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 60px;
+            box-shadow: 0 5px 0 #d9b48b;
+            font-family: monospace;
+        }
+
+        /* 卡片通用樣式 */
+        .fraction-card {
+            background: #fff4e4;
+            border-radius: 45px;
+            padding: 16px 10px;
+            box-shadow: 0 8px 14px rgba(0, 0, 0, 0.12);
+            border: 2px solid #e7cfaa;
+            width: 100%;
+            transition: 0.1s ease;
+        }
+        /* 可拖曳卡片 */
+        .draggable-card {
+            background: #ffe2b5;
+            cursor: grab;
+            border: 2px solid #f5bc7a;
+        }
+        .draggable-card:active {
+            cursor: grabbing;
+        }
+        .draggable-card.dragging {
+            opacity: 0.4;
+        }
+        /* 已放置卡片 */
+        .slotted-card {
+            background: #fff4e4;
+            cursor: default;
+        }
+
+        /* 分數顯示 (豎式) */
+        .fraction-display {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cambria Math', 'Times New Roman', '微軟正黑體', serif;
+        }
+        .fraction-display .numerator {
+            display: block;
+            text-align: center;
+            border-bottom: 3px solid #b97f48;
+            padding: 0 12px 6px 12px;
+            margin-bottom: 4px;
+            font-size: 2rem;
+            line-height: 1.2;
+        }
+        .fraction-display .denominator {
+            display: block;
+            text-align: center;
+            padding-top: 4px;
+            font-size: 2rem;
+            line-height: 1.2;
+        }
+
+        /* 小圓餅圖 */
+        .pie-small {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+        }
+        canvas.pie-canvas-small {
+            background: #fae9d4;
+            border-radius: 50%;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+            width: 80px;
+            height: 80px;
+        }
+
+        /* 可拖曳卡片來源區 */
+        .drag-source-area {
+            background: #eedfcb;
+            border-radius: 55px;
+            padding: 20px;
+            margin: 20px 0 15px;
+            text-align: center;
+        }
+        .drag-cards {
+            display: flex;
+            justify-content: center;
+            gap: 35px;
+            flex-wrap: wrap;
+        }
+        .drag-item {
+            width: 210px;
+        }
+
+        /* 按鈕 */
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 25px;
+        }
+        .check-btn, .reset-btn, .next-btn {
+            font-size: 1.3rem;
+            padding: 10px 28px;
+            border: none;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.08s linear;
+            box-shadow: 0 5px 0 #6f4f2e;
+            font-family: '微軟正黑體', sans-serif;
+        }
+        .check-btn { background: #5f9e6e; color: white; }
+        .reset-btn { background: #c08552; color: #fff6ea; }
+        .next-btn { background: #6da55a; color: white; }
+        .check-btn:active, .reset-btn:active, .next-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #5a3e24;
+        }
+
+        /* 反饋 - 只顯示正確 / 錯誤 (無"排序"字樣) */
+        .feedback {
+            text-align: center;
+            padding: 12px;
+            border-radius: 60px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 20px 0 0;
+            background: #f3e9d8;
+            border-left: 8px solid #e1bc8b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .feedback-correct {
+            background: #cbe6c3;
+            color: #2c6e2c;
+            border-left-color: #5fa04f;
+        }
+        .feedback-wrong {
+            background: #ffdbd1;
+            color: #bc4a2e;
+            border-left-color: #d65c48;
+        }
+        .feedback-icon {
+            font-size: 1.7rem;
+        }
+
+        @media (max-width: 850px) {
+            .slot { width: 190px; min-height: 230px; padding: 15px; }
+            .drag-item { width: 170px; }
+            .fraction-display .numerator, .fraction-display .denominator { font-size: 1.4rem; }
+            .symbol-between { font-size: 2rem; width: 50px; height: 50px; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <!-- 三個位置區 - 水平平排，中間以小於符號連接 -->
+    <div class="slots-area">
+        <div class="slot" data-slot="left" id="slotLeft">
+            <div class="slot-content" id="slotLeftContent"></div>
+        </div>
+        <div class="symbol-between">＜</div>
+        <div class="slot" data-slot="middle" id="slotMiddle">
+            <div class="slot-content" id="slotMiddleContent"></div>
+        </div>
+        <div class="symbol-between">＜</div>
+        <div class="slot" data-slot="right" id="slotRight">
+            <div class="slot-content" id="slotRightContent"></div>
+        </div>
+    </div>
+
+    <!-- 可拖曳的三張卡片來源區 -->
+    <div class="drag-source-area">
+        <div class="drag-cards" id="dragContainer"></div>
+    </div>
+
+    <div class="action-buttons">
+        <button class="check-btn" id="checkBtn">✓ 檢查</button>
+        <button class="reset-btn" id="resetBtn">⟳ 重設</button>
+        <button class="next-btn" id="nextBtn">下一組 ↺</button>
+    </div>
+
+    <div class="feedback" id="feedbackMsg"></div>
+</div>
+
+<script>
+    // ---------- 遊戲狀態 ----------
+    let currentDenominator = 5;
+    let fractions = [];
+    let nextId = 1;
+    
+    let slotContents = { left: null, middle: null, right: null };
+    let availableCards = [];
+    
+    const slotLeftContent = document.getElementById('slotLeftContent');
+    const slotMiddleContent = document.getElementById('slotMiddleContent');
+    const slotRightContent = document.getElementById('slotRightContent');
+    const dragContainer = document.getElementById('dragContainer');
+    const checkBtn = document.getElementById('checkBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const feedbackDiv = document.getElementById('feedbackMsg');
+    
+    // ---------- 繪圖: 等分割圓餅 (無文字) ----------
+    function drawMiniPie(canvas, numerator, denominator) {
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width, h = canvas.height;
+        const centerX = w/2, centerY = h/2;
+        const radius = Math.min(w, h) * 0.38;
+        ctx.clearRect(0, 0, w, h);
+        if (denominator <= 0) denominator = 1;
+        let num = Math.min(Math.max(numerator, 0), denominator);
+        const angleStep = (2 * Math.PI) / denominator;
+        const startAngle = -Math.PI / 2;
+        
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = "#f7e5cd";
+        ctx.fill();
+        ctx.strokeStyle = "#b87a3c";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        
+        for (let i = 0; i < denominator; i++) {
+            const angle = startAngle + i * angleStep;
+            const x2 = centerX + radius * Math.cos(angle);
+            const y2 = centerY + radius * Math.sin(angle);
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = "#c28a4e";
+            ctx.stroke();
+        }
+        if (num > 0) {
+            const fillAngle = num * angleStep;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, startAngle, startAngle + fillAngle);
+            ctx.closePath();
+            ctx.fillStyle = "#f0a35e";
+            ctx.fill();
+            for (let i = 0; i < denominator; i++) {
+                const angle = startAngle + i * angleStep;
+                const x2 = centerX + radius * Math.cos(angle);
+                const y2 = centerY + radius * Math.sin(angle);
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(x2, y2);
+                ctx.strokeStyle = "#a5682c";
+                ctx.stroke();
+            }
+        }
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.strokeStyle = "#7a532c";
+        ctx.stroke();
+    }
+    
+    function createFractionCard(numerator, denominator, cardId, isDraggable = true) {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'fraction-card ' + (isDraggable ? 'draggable-card' : 'slotted-card');
+        cardDiv.style.width = '100%';
+        
+        const inner = document.createElement('div');
+        inner.style.display = 'flex';
+        inner.style.flexDirection = 'column';
+        inner.style.alignItems = 'center';
+        inner.style.gap = '8px';
+        
+        const fracDiv = document.createElement('div');
+        fracDiv.className = 'fraction-display';
+        fracDiv.innerHTML = `<span class="numerator">${numerator}</span><span class="denominator">${denominator}</span>`;
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = 90;
+        canvas.height = 90;
+        canvas.className = 'pie-canvas-small';
+        canvas.style.width = '80px';
+        canvas.style.height = '80px';
+        drawMiniPie(canvas, numerator, denominator);
+        
+        inner.appendChild(fracDiv);
+        inner.appendChild(canvas);
+        cardDiv.appendChild(inner);
+        
+        if (isDraggable) {
+            cardDiv.setAttribute('data-card-id', cardId);
+            cardDiv.setAttribute('draggable', 'true');
+            cardDiv.ondragstart = (e) => {
+                e.dataTransfer.setData('text/plain', cardId);
+                e.dataTransfer.effectAllowed = 'move';
+                cardDiv.classList.add('dragging');
+            };
+            cardDiv.ondragend = (e) => {
+                cardDiv.classList.remove('dragging');
+            };
+        }
+        return cardDiv;
+    }
+    
+    function renderSlots() {
+        slotLeftContent.innerHTML = '';
+        slotMiddleContent.innerHTML = '';
+        slotRightContent.innerHTML = '';
+        
+        if (slotContents.left) {
+            slotLeftContent.appendChild(createFractionCard(slotContents.left.numerator, slotContents.left.denominator, slotContents.left.cardId, false));
+        } else {
+            const emptyHint = document.createElement('div');
+            emptyHint.innerText = '⬅️ 放置';
+            emptyHint.style.opacity = '0.5';
+            emptyHint.style.padding = '20px';
+            emptyHint.style.fontSize = '0.9rem';
+            slotLeftContent.appendChild(emptyHint);
+        }
+        
+        if (slotContents.middle) {
+            slotMiddleContent.appendChild(createFractionCard(slotContents.middle.numerator, slotContents.middle.denominator, slotContents.middle.cardId, false));
+        } else {
+            const emptyHint = document.createElement('div');
+            emptyHint.innerText = '⬅️ 放置';
+            emptyHint.style.opacity = '0.5';
+            emptyHint.style.padding = '20px';
+            emptyHint.style.fontSize = '0.9rem';
+            slotMiddleContent.appendChild(emptyHint);
+        }
+        
+        if (slotContents.right) {
+            slotRightContent.appendChild(createFractionCard(slotContents.right.numerator, slotContents.right.denominator, slotContents.right.cardId, false));
+        } else {
+            const emptyHint = document.createElement('div');
+            emptyHint.innerText = '⬅️ 放置';
+            emptyHint.style.opacity = '0.5';
+            emptyHint.style.padding = '20px';
+            emptyHint.style.fontSize = '0.9rem';
+            slotRightContent.appendChild(emptyHint);
+        }
+    }
+    
+    function renderDragArea() {
+        dragContainer.innerHTML = '';
+        if (availableCards.length === 0) {
+            const doneMsg = document.createElement('div');
+            doneMsg.innerText = '✨ 所有卡片已放置 ✨';
+            doneMsg.style.padding = '15px';
+            doneMsg.style.fontWeight = 'bold';
+            dragContainer.appendChild(doneMsg);
+        } else {
+            availableCards.forEach(card => {
+                const cardEl = createFractionCard(card.numerator, card.denominator, card.id, true);
+                const wrapper = document.createElement('div');
+                wrapper.className = 'drag-item';
+                wrapper.appendChild(cardEl);
+                dragContainer.appendChild(wrapper);
+            });
+        }
+    }
+    
+    function generateDistinctNumerators(denominator) {
+        let nums = new Set();
+        while (nums.size < 3) {
+            const val = Math.floor(Math.random() * (denominator + 1));
+            nums.add(val);
+        }
+        return Array.from(nums);
+    }
+    
+    function initNewQuestion() {
+        currentDenominator = Math.floor(Math.random() * 7) + 3;
+        let distinctNums = generateDistinctNumerators(currentDenominator);
+        fractions = distinctNums.map((num) => ({
+            numerator: num,
+            denominator: currentDenominator,
+            id: nextId++
+        }));
+        slotContents = { left: null, middle: null, right: null };
+        availableCards = fractions.map(f => ({ numerator: f.numerator, denominator: f.denominator, id: f.id }));
+        for (let i = availableCards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [availableCards[i], availableCards[j]] = [availableCards[j], availableCards[i]];
+        }
+        renderSlots();
+        renderDragArea();
+        clearFeedback();
+    }
+    
+    function clearFeedback() {
+        feedbackDiv.innerHTML = '';
+        feedbackDiv.classList.remove('feedback-correct', 'feedback-wrong');
+    }
+    
+    function setFeedback(isCorrect) {
+        if (isCorrect) {
+            feedbackDiv.innerHTML = '<span class="feedback-icon">✓</span> 正確';
+            feedbackDiv.classList.remove('feedback-wrong');
+            feedbackDiv.classList.add('feedback-correct');
+        } else {
+            feedbackDiv.innerHTML = '<span class="feedback-icon">✗</span> 錯誤';
+            feedbackDiv.classList.remove('feedback-correct');
+            feedbackDiv.classList.add('feedback-wrong');
+        }
+    }
+    
+    function checkOrder() {
+        const left = slotContents.left;
+        const middle = slotContents.middle;
+        const right = slotContents.right;
+        if (!left || !middle || !right) {
+            setFeedback(false);
+            return;
+        }
+        if (left.numerator < middle.numerator && middle.numerator < right.numerator) {
+            setFeedback(true);
+        } else {
+            setFeedback(false);
+        }
+    }
+    
+    function resetPositions() {
+        const allCards = [];
+        for (let slot of ['left', 'middle', 'right']) {
+            if (slotContents[slot]) {
+                allCards.push({
+                    numerator: slotContents[slot].numerator,
+                    denominator: slotContents[slot].denominator,
+                    id: slotContents[slot].cardId
+                });
+            }
+        }
+        allCards.push(...availableCards);
+        const uniqueMap = new Map();
+        allCards.forEach(c => uniqueMap.set(c.id, c));
+        availableCards = Array.from(uniqueMap.values());
+        for (let i = availableCards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [availableCards[i], availableCards[j]] = [availableCards[j], availableCards[i]];
+        }
+        slotContents = { left: null, middle: null, right: null };
+        renderSlots();
+        renderDragArea();
+        clearFeedback();
+    }
+    
+    function setupDropTargets() {
+        const slots = document.querySelectorAll('.slot');
+        slots.forEach(slot => {
+            slot.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+            slot.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const dragIdRaw = e.dataTransfer.getData('text/plain');
+                if (!dragIdRaw) return;
+                const cardId = parseInt(dragIdRaw, 10);
+                const draggedCard = availableCards.find(c => c.id === cardId);
+                if (!draggedCard) return;
+                const targetSlot = slot.getAttribute('data-slot');
+                if (slotContents[targetSlot] !== null) {
+                    setFeedback(false);
+                    setTimeout(() => clearFeedback(), 800);
+                    return;
+                }
+                slotContents[targetSlot] = {
+                    numerator: draggedCard.numerator,
+                    denominator: draggedCard.denominator,
+                    cardId: draggedCard.id,
+                };
+                const idx = availableCards.findIndex(c => c.id === cardId);
+                if (idx !== -1) availableCards.splice(idx, 1);
+                renderSlots();
+                renderDragArea();
+                clearFeedback();
+            });
+        });
+    }
+    
+    function preventGlobalDrag() {
+        window.addEventListener('dragstart', (e) => {
+            if (!e.target.closest('.draggable-card')) {
+                e.preventDefault();
+            }
+        });
+    }
+    
+    function nextQuestion() {
+        initNewQuestion();
+    }
+    
+    function initGame() {
+        initNewQuestion();
+        setupDropTargets();
+        preventGlobalDrag();
+        checkBtn.addEventListener('click', checkOrder);
+        resetBtn.addEventListener('click', resetPositions);
+        nextBtn.addEventListener('click', nextQuestion);
+    }
+    
+    initGame();
+</script>
+</body>
+</html>
