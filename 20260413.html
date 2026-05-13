@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>分數小幫手 - 0／b 練習｜水果籃｜紙袋｜禮物袋</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(145deg, #f9e7b3 0%, #f5cda0 100%);
+            font-family: 'Comic Neue', 'Comic Sans MS', 'Chalkboard SE', 'Segoe UI Emoji', cursive, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .game-container {
+            max-width: 1300px;
+            width: 100%;
+            background: #fffef7;
+            border-radius: 72px;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            padding: 20px 25px 35px;
+        }
+
+        .mama-section {
+            background: #ffefcf;
+            border-radius: 60px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 0 #d9b48b;
+        }
+
+        .mama-avatar {
+            font-size: 65px;
+            background: #f7d9a5;
+            border-radius: 100%;
+            padding: 8px;
+            box-shadow: 0 4px 0 #b97f4b;
+        }
+
+        .speech-bubble {
+            background: white;
+            border-radius: 40px;
+            padding: 12px 22px;
+            flex: 1;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #5a3e1b;
+            box-shadow: 0 4px 0 #e7c69e;
+        }
+
+        .main-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin: 15px 0;
+        }
+
+        .drag-area {
+            flex: 2;
+            min-width: 260px;
+            background: #faf0dd;
+            border-radius: 64px;
+            padding: 20px;
+        }
+
+        .answer-area {
+            flex: 1;
+            min-width: 240px;
+            background: #fff6e5;
+            border-radius: 64px;
+            padding: 20px;
+            border: 2px solid #ffcf8a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .scene-title {
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: bold;
+            background: #e7bc7e;
+            display: inline-block;
+            padding: 6px 28px;
+            border-radius: 40px;
+            color: white;
+            margin-bottom: 20px;
+            width: auto;
+        }
+
+        .items-pool {
+            background: #fff3e0;
+            border-radius: 48px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+            border: 3px solid #f3bc6e;
+        }
+
+        .drag-items-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 18px;
+            margin: 15px 0;
+            min-height: 110px;
+        }
+
+        .drag-item, .drag-item-from-drop {
+            font-size: 58px;
+            cursor: grab;
+            transition: transform 0.1s;
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));
+        }
+        .drag-item:active, .drag-item-from-drop:active { cursor: grabbing; }
+
+        .drop-zone {
+            background: #ffe2b5;
+            border: 4px dashed #c29a6b;
+            border-radius: 48px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 15px;
+            min-height: 180px;
+        }
+
+        .dropped-items {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            align-items: center;
+            min-height: 100px;
+        }
+
+        .item-icon {
+            font-size: 52px;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+            cursor: grab;
+        }
+        .item-icon:active {
+            cursor: grabbing;
+        }
+
+        .question-text {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin: 15px 0;
+            text-align: center;
+            background: #fff0cf;
+            padding: 12px;
+            border-radius: 48px;
+        }
+
+        .fraction-input-block {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px auto;
+        }
+
+        .fraction-input-block input {
+            width: 100px;
+            font-size: 2rem;
+            text-align: center;
+            border: 3px solid #f5b642;
+            border-radius: 20px;
+            padding: 6px;
+            font-family: monospace;
+            background: white;
+            font-weight: bold;
+        }
+
+        .fraction-line {
+            width: 80px;
+            height: 4px;
+            background-color: #b97f4b;
+            margin: 6px 0;
+        }
+
+        .fraction-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
+        button {
+            background: #ffb347;
+            border: none;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 10px 24px;
+            border-radius: 40px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #a45d2e;
+            margin: 6px;
+            font-family: inherit;
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #a45d2e;
+        }
+
+        .feedback {
+            background: #e9d6b0;
+            border-radius: 40px;
+            padding: 10px;
+            font-size: 1.2rem;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .type-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .type-btn {
+            background: #d9a066;
+            box-shadow: 0 5px 0 #7a4a24;
+            font-size: 1.1rem;
+        }
+
+        .type-btn.active {
+            background: #ff8c42;
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #7a4a24;
+        }
+
+        .btn-row {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 800px) {
+            .drag-item, .drag-item-from-drop { font-size: 44px; }
+            .item-icon { font-size: 42px; }
+            .fraction-input-block input { width: 75px; font-size: 1.5rem; }
+            .question-text { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <div class="mama-section">
+        <div class="mama-avatar">👩‍🍳🧺</div>
+        <div class="speech-bubble" id="mamaTalk"></div>
+    </div>
+
+    <div class="type-selector">
+        <button id="btnFruit" class="type-btn active">🍎 水果籃 🍊</button>
+        <button id="btnPaperBag" class="type-btn">📄 紙袋</button>
+        <button id="btnGiftBag" class="type-btn">🎁 禮物袋</button>
+    </div>
+
+    <div class="main-row">
+        <div class="drag-area">
+            <div style="text-align: center;"><span class="scene-title" id="sceneTitle">🍎 水果籃 🍊</span></div>
+            <div class="items-pool">
+                <div class="drag-items-container" id="dragPool"></div>
+                <button id="resetDragBtn" class="reset-btn" style="background:#a45d2e;">🔄 重置物品</button>
+            </div>
+            <div class="drop-zone" id="dropZone">
+                <div id="dropZoneTitle"></div>
+                <div id="droppedContainer" class="dropped-items"></div>
+            </div>
+        </div>
+
+        <div class="answer-area">
+            <div class="question-text" id="questionText">?</div>
+            <div class="fraction-wrapper">
+                <span>答案：</span>
+                <div class="fraction-input-block">
+                    <input type="number" id="fractionNumerator" placeholder="分子" min="0" step="1">
+                    <div class="fraction-line"></div>
+                    <input type="number" id="fractionDenominator" placeholder="分母" min="1" step="1">
+                </div>
+            </div>
+            <div class="btn-row">
+                <button id="checkAnswerBtn">✅ 檢查答案</button>
+                <button id="nextQuestionBtn">🌟 新題目</button>
+            </div>
+            <div class="feedback" id="feedbackMsg">💡 拖曳物品到容器裡，再填寫分數！</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ----- 遊戲核心 -----
+    let currentType = "fruit";   // "fruit", "paperBag", "giftBag"
+    
+    // 儲存「初始」的物品池（用來重置同一題目）
+    let originalDraggablePool = [];
+    let droppedItems = [];        // 已放入容器中的物品
+    let draggablePool = [];       // 尚未拖曳的物品
+    let nextId = 1;
+
+    let currentTargetName = "";
+    let currentTotal = 0;
+    let currentTargetCount = 0;
+    let correctNumerator = 0;
+    let correctDenominator = 0;
+    let isAnsweredCorrect = false;
+
+    const sceneTitleSpan = document.getElementById("sceneTitle");
+    const dragPoolDiv = document.getElementById("dragPool");
+    const droppedContainerDiv = document.getElementById("droppedContainer");
+    const dropZoneTitle = document.getElementById("dropZoneTitle");
+    const questionTextSpan = document.getElementById("questionText");
+    const numeratorInput = document.getElementById("fractionNumerator");
+    const denominatorInput = document.getElementById("fractionDenominator");
+    const feedbackMsgDiv = document.getElementById("feedbackMsg");
+    const mamaTalkSpan = document.getElementById("mamaTalk");
+
+    // 設定媽媽的話（只使用指定的固定語句）
+    function setMamaMessageByType() {
+        if (currentType === "fruit") {
+            mamaTalkSpan.innerHTML = "🍎 把蘋果和橘子放進水果籃，然後回答蘋果或橘子佔全部水果的幾分之幾～";
+            dropZoneTitle.innerHTML = "🧺 水果籃 (拖曳到這裡)";
+        } else if (currentType === "paperBag") {
+            mamaTalkSpan.innerHTML = "🍪 把曲奇和冬甩放進紙袋，然後回答曲奇或冬甩佔紙袋內全部物件的幾分之幾～";
+            dropZoneTitle.innerHTML = "📄 紙袋 (拖曳到這裡)";
+        } else {
+            mamaTalkSpan.innerHTML = "🥤🧃 把杯裝飲品和紙包飲品放進禮物袋，然後回答杯裝飲品或紙包飲品佔禮物袋內全部物件的幾分之幾～";
+            dropZoneTitle.innerHTML = "🎁 禮物袋 (拖曳到這裡)";
+        }
+    }
+
+    // 生成物品池（極低機率出現單一類型）
+    function generateItemsForType(type) {
+        let items = [];
+        let itemCount = Math.floor(Math.random() * 6) + 3; // 3~8
+        
+        if (type === "fruit") {
+            let makeOnlyOneType = Math.random() < 0.08;
+            if (makeOnlyOneType) {
+                let onlyApple = Math.random() < 0.5;
+                for (let i = 0; i < itemCount; i++) {
+                    items.push({
+                        id: nextId++,
+                        emoji: onlyApple ? "🍎" : "🍊",
+                        name: onlyApple ? "蘋果" : "橘子",
+                        category: "fruit"
+                    });
+                }
+            } else {
+                let appleCount = Math.floor(Math.random() * (itemCount - 1)) + 1;
+                let orangeCount = itemCount - appleCount;
+                for (let i = 0; i < appleCount; i++) items.push({ id: nextId++, emoji: "🍎", name: "蘋果", category: "fruit" });
+                for (let i = 0; i < orangeCount; i++) items.push({ id: nextId++, emoji: "🍊", name: "橘子", category: "fruit" });
+            }
+        } 
+        else if (type === "paperBag") {
+            let makeOnlyOneType = Math.random() < 0.08;
+            if (makeOnlyOneType) {
+                let onlyCookie = Math.random() < 0.5;
+                for (let i = 0; i < itemCount; i++) {
+                    items.push({
+                        id: nextId++,
+                        emoji: onlyCookie ? "🍪" : "🍩",
+                        name: onlyCookie ? "曲奇" : "冬甩",
+                        category: "paper"
+                    });
+                }
+            } else {
+                let cookieCount = Math.floor(Math.random() * (itemCount - 1)) + 1;
+                let donutCount = itemCount - cookieCount;
+                for (let i = 0; i < cookieCount; i++) items.push({ id: nextId++, emoji: "🍪", name: "曲奇", category: "paper" });
+                for (let i = 0; i < donutCount; i++) items.push({ id: nextId++, emoji: "🍩", name: "冬甩", category: "paper" });
+            }
+        } 
+        else if (type === "giftBag") {
+            let makeOnlyOneType = Math.random() < 0.08;
+            if (makeOnlyOneType) {
+                let onlyCup = Math.random() < 0.5;
+                for (let i = 0; i < itemCount; i++) {
+                    items.push({
+                        id: nextId++,
+                        emoji: onlyCup ? "🥤" : "🧃",
+                        name: onlyCup ? "杯裝飲品" : "紙包飲品",
+                        category: "gift"
+                    });
+                }
+            } else {
+                let cupCount = Math.floor(Math.random() * (itemCount - 1)) + 1;
+                let drinkCount = itemCount - cupCount;
+                for (let i = 0; i < cupCount; i++) items.push({ id: nextId++, emoji: "🥤", name: "杯裝飲品", category: "gift" });
+                for (let i = 0; i < drinkCount; i++) items.push({ id: nextId++, emoji: "🧃", name: "紙包飲品", category: "gift" });
+            }
+        }
+        // 打亂順序
+        for (let i = items.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [items[i], items[j]] = [items[j], items[i]];
+        }
+        return items;
+    }
+
+    // 重置同一題目（將所有物品恢復到初始狀態）
+    function resetToOriginal() {
+        draggablePool = originalDraggablePool.map(item => ({ ...item, id: item.id }));
+        droppedItems = [];
+        isAnsweredCorrect = false;
+        numeratorInput.value = "";
+        denominatorInput.value = "";
+        renderAll();
+        updateQuestionFromContainer();
+        feedbackMsgDiv.innerHTML = "💡 拖曳物品到容器裡，再填寫分數！";
+    }
+
+    // 全新題目（隨機生成新物品池）
+    function loadNewQuestion() {
+        originalDraggablePool = generateItemsForType(currentType);
+        draggablePool = originalDraggablePool.map(item => ({ ...item, id: item.id }));
+        droppedItems = [];
+        isAnsweredCorrect = false;
+        numeratorInput.value = "";
+        denominatorInput.value = "";
+        renderAll();
+        updateQuestionFromContainer();
+        feedbackMsgDiv.innerHTML = "✨ 新題目！";
+        setTimeout(() => {
+            if (feedbackMsgDiv.innerHTML === "✨ 新題目！") {
+                feedbackMsgDiv.innerHTML = "💡 拖曳物品到容器裡，再填寫分數！";
+            }
+        }, 2000);
+    }
+
+    function renderAll() {
+        renderDragPool();
+        renderDroppedContainer();
+        makeDroppedItemsDraggableBack();
+    }
+
+    function renderDragPool() {
+        dragPoolDiv.innerHTML = "";
+        if (draggablePool.length === 0) {
+            dragPoolDiv.innerHTML = "<div style='padding:20px;'>✨ 沒有物品了！按「重置物品」繼續練習 ✨</div>";
+            return;
+        }
+        draggablePool.forEach(item => {
+            const div = document.createElement("div");
+            div.className = "drag-item";
+            div.textContent = item.emoji;
+            div.setAttribute("draggable", "true");
+            div.setAttribute("data-id", item.id);
+            div.setAttribute("data-name", item.name);
+            div.setAttribute("data-category", item.category);
+            div.setAttribute("data-source", "dragPool");
+            div.addEventListener("dragstart", handleDragStart);
+            div.addEventListener("dragend", handleDragEnd);
+            dragPoolDiv.appendChild(div);
+        });
+    }
+
+    function renderDroppedContainer() {
+        droppedContainerDiv.innerHTML = "";
+        if (droppedItems.length === 0) {
+            droppedContainerDiv.innerHTML = "<div style='padding:20px; color:#aa7a44;'>✨ 容器是空的，把物品拖曳進來 ✨</div>";
+            return;
+        }
+        droppedItems.forEach((item, idx) => {
+            const span = document.createElement("span");
+            span.className = "item-icon";
+            span.textContent = item.emoji;
+            span.title = item.name;
+            span.setAttribute("draggable", "true");
+            span.setAttribute("data-id", item.id);
+            span.setAttribute("data-name", item.name);
+            span.setAttribute("data-category", item.category);
+            span.setAttribute("data-source", "dropped");
+            span.setAttribute("data-index", idx);
+            span.addEventListener("dragstart", handleDragStartFromDropped);
+            span.addEventListener("dragend", handleDragEnd);
+            droppedContainerDiv.appendChild(span);
+        });
+    }
+
+    function makeDroppedItemsDraggableBack() {
+        // 已在 renderDroppedContainer 中加入 dragstart 監聽
+    }
+
+    let dragSourceId = null;
+    let dragSourceType = null;
+    let dragSourceIndex = null;
+
+    function handleDragStart(e) {
+        const target = e.target.closest(".drag-item");
+        if (!target) return;
+        dragSourceId = parseInt(target.getAttribute("data-id"));
+        dragSourceType = target.getAttribute("data-source");
+        e.dataTransfer.setData("text/plain", dragSourceId);
+        e.dataTransfer.effectAllowed = "move";
+    }
+
+    function handleDragStartFromDropped(e) {
+        const target = e.target.closest(".item-icon");
+        if (!target) return;
+        dragSourceId = parseInt(target.getAttribute("data-id"));
+        dragSourceType = target.getAttribute("data-source");
+        dragSourceIndex = parseInt(target.getAttribute("data-index"));
+        e.dataTransfer.setData("text/plain", dragSourceId);
+        e.dataTransfer.effectAllowed = "move";
+    }
+
+    function handleDragEnd(e) {
+        dragSourceId = null;
+        dragSourceType = null;
+        dragSourceIndex = null;
+    }
+
+    const dropZoneDiv = document.getElementById("dropZone");
+    dropZoneDiv.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+    });
+    dropZoneDiv.addEventListener("drop", (e) => {
+        e.preventDefault();
+        if (isAnsweredCorrect) {
+            feedbackMsgDiv.innerHTML = "✅ 正確！";
+            return;
+        }
+        const sourceId = dragSourceId;
+        if (sourceId === null) return;
+        
+        if (dragSourceType === "dragPool") {
+            const itemIndex = draggablePool.findIndex(item => item.id === sourceId);
+            if (itemIndex === -1) return;
+            const draggedItem = draggablePool[itemIndex];
+            let isValid = false;
+            if (currentType === "fruit" && draggedItem.category === "fruit") isValid = true;
+            else if (currentType === "paperBag" && draggedItem.category === "paper") isValid = true;
+            else if (currentType === "giftBag" && draggedItem.category === "gift") isValid = true;
+            
+            if (!isValid) {
+                feedbackMsgDiv.innerHTML = "❌ 不對！";
+                return;
+            }
+            draggablePool.splice(itemIndex, 1);
+            droppedItems.push(draggedItem);
+            renderAll();
+            updateQuestionFromContainer();
+            if (isAnsweredCorrect) {
+                isAnsweredCorrect = false;
+                feedbackMsgDiv.innerHTML = "💡 拖曳物品到容器裡，再填寫分數！";
+            }
+        }
+        else if (dragSourceType === "dropped") {
+            if (dragSourceIndex !== null && droppedItems[dragSourceIndex]) {
+                const movedItem = droppedItems[dragSourceIndex];
+                droppedItems.splice(dragSourceIndex, 1);
+                draggablePool.push(movedItem);
+                renderAll();
+                updateQuestionFromContainer();
+                if (isAnsweredCorrect) {
+                    isAnsweredCorrect = false;
+                    feedbackMsgDiv.innerHTML = "💡 拖曳物品到容器裡，再填寫分數！";
+                }
+            }
+        }
+        dragSourceId = null;
+        dragSourceType = null;
+        dragSourceIndex = null;
+    });
+
+    function updateQuestionFromContainer() {
+        if (droppedItems.length === 0) {
+            currentTotal = 0;
+            currentTargetCount = 0;
+            correctNumerator = 0;
+            correctDenominator = 1;
+            let containerType = (currentType === "fruit") ? "水果籃" : ((currentType === "paperBag") ? "紙袋" : "禮物袋");
+            questionTextSpan.innerHTML = `📦 ${containerType} 還是空的！請先把物品拖曳進來～`;
+            return;
+        }
+        let stats = {};
+        droppedItems.forEach(item => { stats[item.name] = (stats[item.name] || 0) + 1; });
+        
+        let allItemTypes = [];
+        if (currentType === "fruit") allItemTypes = ["蘋果", "橘子"];
+        else if (currentType === "paperBag") allItemTypes = ["曲奇", "冬甩"];
+        else allItemTypes = ["杯裝飲品", "紙包飲品"];
+        
+        let zeroTarget = null;
+        for (let typeName of allItemTypes) {
+            if (!stats[typeName]) {
+                zeroTarget = typeName;
+                break;
+            }
+        }
+        
+        let target = "";
+        let targetCount = 0;
+        
+        if (zeroTarget !== null && Math.random() < 0.12) {
+            target = zeroTarget;
+            targetCount = 0;
+        } else {
+            let possibleTargets = Object.keys(stats);
+            if (possibleTargets.length === 0) target = allItemTypes[0];
+            else target = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
+            targetCount = stats[target] || 0;
+        }
+        
+        currentTargetName = target;
+        currentTotal = droppedItems.length;
+        currentTargetCount = targetCount;
+        correctNumerator = targetCount;
+        correctDenominator = currentTotal;
+        
+        let containerName = "";
+        if (currentType === "fruit") containerName = "水果籃";
+        else if (currentType === "paperBag") containerName = "紙袋";
+        else containerName = "禮物袋";
+        
+        questionTextSpan.innerHTML = `📦 ${containerName} 內共有 ${currentTotal} 個物件，其中 ${target} 佔全部物件的幾分之幾？`;
+    }
+
+    function checkAnswer() {
+        if (droppedItems.length === 0) {
+            feedbackMsgDiv.innerHTML = "❌ 不對！";
+            return;
+        }
+        if (isAnsweredCorrect) {
+            feedbackMsgDiv.innerHTML = "✅ 正確！";
+            return;
+        }
+        let userNum = parseInt(numeratorInput.value);
+        let userDen = parseInt(denominatorInput.value);
+        if (isNaN(userNum) || isNaN(userDen) || userDen <= 0) {
+            feedbackMsgDiv.innerHTML = "❌ 不對！";
+            return;
+        }
+        if (userNum === correctNumerator && userDen === correctDenominator) {
+            isAnsweredCorrect = true;
+            feedbackMsgDiv.innerHTML = "✅ 正確！";
+        } else {
+            feedbackMsgDiv.innerHTML = `❌ 不對！ ${currentTargetName} 有 ${currentTargetCount} 個，全部共 ${currentTotal} 個。`;
+            isAnsweredCorrect = false;
+        }
+    }
+
+    function switchToType(type) {
+        currentType = type;
+        document.getElementById("btnFruit").classList.remove("active");
+        document.getElementById("btnPaperBag").classList.remove("active");
+        document.getElementById("btnGiftBag").classList.remove("active");
+        if (type === "fruit") document.getElementById("btnFruit").classList.add("active");
+        else if (type === "paperBag") document.getElementById("btnPaperBag").classList.add("active");
+        else document.getElementById("btnGiftBag").classList.add("active");
+        
+        if (type === "fruit") sceneTitleSpan.innerHTML = "🍎 水果籃 🍊";
+        else if (type === "paperBag") sceneTitleSpan.innerHTML = "📄 紙袋";
+        else sceneTitleSpan.innerHTML = "🎁 禮物袋";
+        
+        setMamaMessageByType();
+        
+        originalDraggablePool = generateItemsForType(currentType);
+        draggablePool = originalDraggablePool.map(item => ({ ...item, id: item.id }));
+        droppedItems = [];
+        isAnsweredCorrect = false;
+        numeratorInput.value = "";
+        denominatorInput.value = "";
+        renderAll();
+        updateQuestionFromContainer();
+        feedbackMsgDiv.innerHTML = "💡 拖曳物品到容器裡，再填寫分數！";
+    }
+
+    document.getElementById("resetDragBtn").addEventListener("click", () => {
+        resetToOriginal();
+    });
+    document.getElementById("checkAnswerBtn").addEventListener("click", checkAnswer);
+    document.getElementById("nextQuestionBtn").addEventListener("click", () => {
+        loadNewQuestion();
+    });
+    document.getElementById("btnFruit").addEventListener("click", () => switchToType("fruit"));
+    document.getElementById("btnPaperBag").addEventListener("click", () => switchToType("paperBag"));
+    document.getElementById("btnGiftBag").addEventListener("click", () => switchToType("giftBag"));
+
+    switchToType("fruit");
+</script>
+</body>
+</html>
